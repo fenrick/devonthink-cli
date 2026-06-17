@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Relation Note"
+  short_description: "Operational PKIM skill: dt-build-relation-note"
+  default_prompt: "Use dt-build-relation-note for the task, follow the SKILL.md workflow, and produce the documented output contract."

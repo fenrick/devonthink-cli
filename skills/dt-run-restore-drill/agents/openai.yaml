@@ -1,0 +1,4 @@
+interface:
+  display_name: "Run Restore Drill"
+  short_description: "Operational PKIM skill: dt-run-restore-drill"
+  default_prompt: "Use dt-run-restore-drill for the task, follow the SKILL.md workflow, and produce the documented output contract."

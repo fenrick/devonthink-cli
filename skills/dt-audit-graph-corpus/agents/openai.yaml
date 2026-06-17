@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit Graph Corpus"
+  short_description: "Operational PKIM skill: dt-audit-graph-corpus"
+  default_prompt: "Use dt-audit-graph-corpus for the task, follow the SKILL.md workflow, and produce the documented output contract."

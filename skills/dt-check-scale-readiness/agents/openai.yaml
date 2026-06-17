@@ -1,0 +1,4 @@
+interface:
+  display_name: "Check Scale Readiness"
+  short_description: "Operational PKIM skill: dt-check-scale-readiness"
+  default_prompt: "Use dt-check-scale-readiness for the task, follow the SKILL.md workflow, and produce the documented output contract."

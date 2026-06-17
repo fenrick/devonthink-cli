@@ -1,0 +1,10 @@
+[
+  {
+    "query": "use dt-profile-record for the relevant PKIM task and follow the documented workflow",
+    "should_trigger": true
+  },
+  {
+    "query": "do an unrelated generic coding task",
+    "should_trigger": false
+  }
+]

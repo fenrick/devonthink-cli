@@ -1,0 +1,12 @@
+# Placeholder pyproject for tooling that expects one at the repo root.
+# The Python runtime was retired by the CLI-first pivot (doc 22). The
+# runtime is the Swift binary at `pkim-binary/`; this file exists only
+# so a stray `uv pip install` or `pytest` invocation against the repo
+# root degrades gracefully instead of failing on missing pyproject.
+[project]
+name = "pkim"
+version = "0.2.0"
+description = "Stub for the retired Python package. Runtime lives in pkim-binary/."
+readme = "README.md"
+requires-python = ">=3.12,<3.15"
+dependencies = []

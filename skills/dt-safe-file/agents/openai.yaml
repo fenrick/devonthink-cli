@@ -1,0 +1,4 @@
+interface:
+  display_name: "Safe File"
+  short_description: "Operational PKIM skill: dt-safe-file"
+  default_prompt: "Use dt-safe-file for the task, follow the SKILL.md workflow, and produce the documented output contract."

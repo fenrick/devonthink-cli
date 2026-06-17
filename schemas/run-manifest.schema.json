@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pkim.local/schemas/run-manifest.schema.json",
+  "title": "RunManifest",
+  "type": "object",
+  "required": ["run_id", "runtime", "result"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "runtime": { "type": "string" },
+    "result": { "type": "string" },
+    "environment": { "type": "string" },
+    "scratch_database": { "type": "string" },
+    "knowledge_database": { "type": "string" },
+    "production_writes_enabled": { "type": "boolean" },
+    "mcp_command": { "type": "string" },
+    "mcp_binary_found": { "type": "boolean" },
+    "export_root": { "type": "string" },
+    "message": { "type": "string" },
+    "expected_output_schema": { "type": "string" }
+  },
+  "additionalProperties": true
+}
+

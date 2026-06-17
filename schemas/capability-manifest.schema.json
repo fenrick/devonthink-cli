@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pkim.local/schemas/capability-manifest.schema.json",
+  "title": "CapabilityManifest",
+  "type": "object",
+  "required": ["run_id", "runtime", "result"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "runtime": { "type": "string" },
+    "result": { "type": "string" },
+    "tools": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": true
+}
+

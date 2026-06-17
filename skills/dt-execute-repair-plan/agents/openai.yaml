@@ -1,0 +1,4 @@
+interface:
+  display_name: "Execute Repair Plan"
+  short_description: "Operational PKIM skill: dt-execute-repair-plan"
+  default_prompt: "Use dt-execute-repair-plan for the task, follow the SKILL.md workflow, and produce the documented output contract."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sweep Inbox"
+  short_description: "Operational PKIM skill: dt-sweep-inbox"
+  default_prompt: "Use dt-sweep-inbox for the task, follow the SKILL.md workflow, and produce the documented output contract."

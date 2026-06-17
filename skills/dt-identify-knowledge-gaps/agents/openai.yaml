@@ -1,0 +1,4 @@
+interface:
+  display_name: "Identify Knowledge Gaps"
+  short_description: "Operational PKIM skill: dt-identify-knowledge-gaps"
+  default_prompt: "Use dt-identify-knowledge-gaps for the task, follow the SKILL.md workflow, and produce the documented output contract."

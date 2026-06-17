@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pkim.local/schemas/export-manifest.schema.json",
+  "title": "ExportManifest",
+  "type": "object",
+  "required": ["run_id", "runtime", "result"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "runtime": { "type": "string" },
+    "result": { "type": "string" },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "pkim_id": { "type": "string" },
+          "export_path": { "type": "string" },
+          "status": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
+

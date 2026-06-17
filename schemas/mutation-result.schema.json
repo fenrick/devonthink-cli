@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pkim.local/schemas/mutation-result.schema.json",
+  "title": "MutationResult",
+  "type": "object",
+  "required": ["run_id", "runtime", "result", "command"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "runtime": { "type": "string" },
+    "result": { "type": "string" },
+    "command": { "type": "string" },
+    "message": { "type": "string" },
+    "before": { "type": "object" },
+    "intended": { "type": "object" },
+    "after": { "type": "object" }
+  },
+  "additionalProperties": true
+}
+

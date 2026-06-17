@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ensure Group Path"
+  short_description: "Operational PKIM skill: dt-ensure-group-path"
+  default_prompt: "Use dt-ensure-group-path for the task, follow the SKILL.md workflow, and produce the documented output contract."
