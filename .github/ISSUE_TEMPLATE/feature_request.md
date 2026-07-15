@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Propose a new verb, skill, or behaviour
+about: Propose a new skill, prompt, or design change
 title: 'feat: '
 labels: enhancement
 ---
@@ -8,13 +8,13 @@ labels: enhancement
 ## The problem
 
 <!-- The thing you're currently unable to do, in plain language.
-     Not "I want a verb that does X" — explain the workflow that's stuck. -->
+     Not "I want a tool that does X" — explain the workflow that's stuck. -->
 
 ## Proposed shape
 
-<!-- If you have one. Atomic verb? Skill workflow composing existing verbs?
-     Doc 22 §"Layer rules" is binding: the binary owns mechanism only;
-     policy belongs in skills. -->
+<!-- Which layer? Skill workflow / prompt / design brief change / all three.
+     Doc 24 is binding: skills compose DT MCP tools directly; there is no
+     PKIM-owned runtime to extend. -->
 
 ## Where it sits
 
@@ -23,4 +23,4 @@ labels: enhancement
 
 ## Alternatives considered
 
-<!-- Existing verbs / skills that almost do this, and why they fall short. -->
+<!-- Existing skills / prompts that almost do this, and why they fall short. -->

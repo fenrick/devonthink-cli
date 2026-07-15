@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Something the binary does that the spec says it shouldn't
+about: Something a skill, prompt, or design brief says that doesn't hold in practice
 title: 'bug: '
 labels: bug
 ---
@@ -11,29 +11,18 @@ labels: bug
 
 ## What you expected
 
-<!-- One sentence. What the spec / docs say should happen. -->
+<!-- One sentence. What the docs / skill / prompt said should happen. -->
 
 ## Repro
 
-```bash
-# Exact command line:
-pkim <verb> --flag value
-```
-
-JSON envelope returned (paste verbatim):
-
-```json
-{ "ok": ..., "verb": "...", ... }
-```
-
-If this was a write: include `runs/<run-id>/mutation.json` (or
-`mutation-proposal.json` for dry-runs).
+<!-- Which skill, prompt, or workflow. Which DT MCP tools were called and with what
+     arguments. Paste the JSON response verbatim. -->
 
 ## Environment
 
 - macOS version:
 - DEVONthink version:
-- `pkim` build (commit hash or version):
+- AI client (Claude Code, Codex CLI, other):
 - Database affected (PKIM-Knowledge / PKIM-Evidence-* / PKIM-Pilot / other):
 
 ## Design brief touched

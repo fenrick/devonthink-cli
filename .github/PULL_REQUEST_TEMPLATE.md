@@ -13,15 +13,14 @@
 
 ## How it was tested
 
-- [ ] `swift build` clean
-- [ ] `swift test` passes (70+ tests)
-- [ ] Live SB tests run (`PKIM_BRIDGE_LIVE=1 swift test`) — if write paths changed
-- [ ] Tried the verb manually against a scratch database
+- [ ] Walked through the change against a scratch DEVONthink database via DT MCP
+- [ ] All referenced skills / prompts read cleanly end-to-end
+- [ ] Cross-references (WikiLinks, item links) resolve as expected
 
 ## Checklist
 
 - [ ] Commits follow conventional-commits style
-- [ ] No new file-private helpers that duplicate existing `DTBridge` / `DTRecordAccess` accessors
-- [ ] Write paths still go through `runWriteVerb` and `WriteGate.require`
-- [ ] No long-lived process or warm-cache state introduced (doc 22 anti-pattern)
-- [ ] No compound "doIt"-style verb (doc 23 anti-pattern)
+- [ ] No new PKIM-owned runtime layer between skills and DT MCP (doc 24 anti-pattern)
+- [ ] No "safer helper" wrappers around DT MCP tools (doc 24 anti-pattern)
+- [ ] Cross-database references use item links, not `[[Name|Display]]` WikiLinks
+- [ ] `PKIM_ID` treated as metadata field, not runtime identity
