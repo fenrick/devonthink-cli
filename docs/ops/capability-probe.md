@@ -6,7 +6,7 @@ Confirm the local runtime surface is coherent before any automation acts on live
 
 **Rule: no agent session may issue writes without a passing probe in the same session.**
 
-Since the runtime is now DEVONthink 4.3+'s in-app MCP server (see [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md)), the "probe" is two DT MCP calls that any skill can make cheaply.
+Since the runtime is now DEVONthink 4.3+'s in-app MCP server (see [../design/07-runtime.md](../design/07-runtime.md)), the "probe" is two DT MCP calls that any skill can make cheaply.
 
 ## Preflight
 
@@ -47,7 +47,7 @@ There is no PKIM-owned override. If a workflow needs to touch a `-excluded` reco
 |---|---|
 | `is_running` returns `{running: false}` | Open DEVONthink and re-run |
 | `get_databases` missing a required entry | Open the missing database in DEVONthink and re-run |
-| `list_custom_metadata_fields` missing required fields | Run the `dt-bootstrap-pkim` skill (or manually add the fields per [compatibility-matrix.md](compatibility-matrix.md)) |
+| `list_custom_metadata_fields` missing required fields | Run the `dt-bootstrap` skill (or manually add the fields per [compatibility-matrix.md](compatibility-matrix.md)) |
 | DT MCP not responding at all | Check DT's Settings > AI > MCP panel — the server may be stopped or restart may be needed |
 
 ## What retired

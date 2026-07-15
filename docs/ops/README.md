@@ -1,6 +1,6 @@
 # Operations Index
 
-> **Runtime note (2026-07-15).** DEVONthink 4.3+'s in-app MCP server is the runtime. Any `pkim <verb>` reference in these ops docs (or in the skills) is historical — see [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces it.
+> **Runtime note (2026-07-15).** DEVONthink 4.3+'s in-app MCP server is the runtime. Any `pkim <verb>` reference in these ops docs (or in the skills) is historical — see [../design/07-runtime.md](../design/07-runtime.md) for how skills compose DT MCP.
 
 ## Purpose
 
@@ -46,7 +46,6 @@ If a doc only lists tool calls, it is a reference page, not an operating page.
 | [setup-checklist.md](setup-checklist.md) | Initial DEVONthink setup |
 | [restore-drill.md](restore-drill.md) | Backup and restore evidence |
 | [compatibility-matrix.md](compatibility-matrix.md) | Local version and feature compatibility |
-| [build-plan.md](build-plan.md) | Historical build state; largely superseded by doc 24 |
 
 ## Minimal Context Sets
 

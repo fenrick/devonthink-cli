@@ -6,7 +6,7 @@ Keep runtime configuration explicit so agents do not guess where to write or whi
 
 ## Runtime
 
-The runtime is DEVONthink 4.3+'s in-app MCP server. See [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md). No Python or Swift runtime lives in this repo.
+The runtime is DEVONthink 4.3+'s in-app MCP server. See [../design/07-runtime.md](../design/07-runtime.md). No Python or Swift runtime lives in this repo.
 
 To enable the DEVONthink MCP server:
 

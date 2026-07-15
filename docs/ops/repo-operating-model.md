@@ -1,6 +1,6 @@
 # Repo Operating Model
 
-> **Runtime note (2026-07-15).** Any `pkim <verb>` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces it.
+> **Runtime note (2026-07-15).** Any `pkim <verb>` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../design/07-runtime.md](../design/07-runtime.md) for how skills compose DT MCP.
 
 ## Purpose
 
@@ -75,4 +75,3 @@ Use it to decide what to run at the start of a work session, how to process inbo
 - Local environment: [local-environment.md](local-environment.md)
 - Intake workflow: [intake-runbook.md](intake-runbook.md)
 - Capability probe: [capability-probe.md](capability-probe.md)
-- Build history and backlog: [build-plan.md](build-plan.md)

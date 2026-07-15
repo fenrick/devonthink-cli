@@ -3,7 +3,7 @@ name: pkim-primer
 description: The PKIM primer — record classes (EV / KN / RL / CL), tag axes, custom metadata schema, filing rules, cross-database WikiLink constraint. Use at the start of any PKIM session and whenever the user mentions PKIM, DEVONthink knowledge notes, evidence records, relation notes, claim records, or is composing DT MCP tools against a PKIM database. Every other PKIM skill assumes this primer has been read.
 ---
 
-> **Runtime.** DEVONthink 4.3+ in-app MCP server. See [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md).
+> **Runtime.** DEVONthink 4.3+ in-app MCP server. Skills compose its tools directly; there is no PKIM-owned runtime layer.
 
 # pkim-primer
 
@@ -41,7 +41,6 @@ Every section below sits in `references/`. Pull them in when the current task to
 | [references/metadata-schema.md](references/metadata-schema.md) | Reading or writing custom metadata; picking valid enum values; understanding set-field validation |
 | [references/wikilink-and-item-link.md](references/wikilink-and-item-link.md) | Authoring a note body that references other records; converting a dangling WikiLink |
 | [references/dt-mcp-cheatsheet.md](references/dt-mcp-cheatsheet.md) | Choosing which DT MCP tool to call; common patterns; things not to do |
-| [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) | The runtime brief; the retirement trail |
 
 ## Common patterns you'll compose yourself
 

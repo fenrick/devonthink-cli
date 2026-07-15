@@ -19,5 +19,5 @@ This repository is the shared operational surface for designing, extending, and 
 - Keep canonical design intent in markdown.
 - Use deterministic local scripts and adapters over opaque agent state.
 - If you add a tool, document its contract, inputs, outputs, and failure modes before wiring it into agents.
-- If a design decision changes, update `docs/design/00-source-reconciliation.md` or the relevant component brief so the delta stays explicit.
+- If a design decision changes, edit the relevant numbered brief under `docs/design/` in place. Git history carries the reasoning trail; no supersession banners.
 

@@ -1,6 +1,6 @@
 # Operating Rhythm
 
-> **Runtime note (2026-07-15).** Any `pkim <verb>` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md) for the mapping table.
+> **Runtime note (2026-07-15).** Any `pkim <verb>` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../design/07-runtime.md](../design/07-runtime.md) for the mapping table.
 
 ## Purpose
 
@@ -76,12 +76,12 @@ Use this order:
 6. Sync mirrors when canonical notes changed.
 7. Review outcomes and commit repo changes in small chunks.
 
-The compound operations that used to be single Python verbs (`sweep-inbox`, `graph-audit`, `metadata-overview`, etc.) live in skill markdown that composes DT MCP tools:
+Four named skills carry the workflow judgement:
 
-- **Inbox triage** — `dt-sweep-inbox` composes `search_records` (scoped to `/Inbox/`) + `get_record_properties` + `set_record_custom_metadata mode="merge"` + `move_record`.
-- **Per-record profiling** — `dt-profile-record` composes `get_record_properties` + `get_record_text` + `get_record_tags` + skill judgement.
-- **Graph audit** — `dt-audit-graph-corpus` composes `search_records` + `get_record_text` + `get_record_properties` and emits a findings JSON for review.
-- **Mirror export** — `dt-sync-export-mirror` composes `get_record_properties` + `get_record_text` + `update_record_content` where writeback is needed.
+- **`pkim-primer`** — session-start reference (record classes, tag axes, metadata schema, filing rules). Read once per session.
+- **`dt-bootstrap`** — idempotent installer for the canonical PKIM configuration. Fires only when the primer's preflight surfaces a gap.
+- **`dt-intake`** — inbox sweep. Fans out one Sonnet subagent per record for profile + enrichment + optional KN/RL authoring + filing.
+- **`dt-audit`** — graph-health check. Walks broken RL endpoints, zombie claims, corpus contradictions, dangling WikiLinks, orphans, and discipline violations.
 
 Run a skill by reading its `SKILL.md` and following the steps; the skill calls DT MCP tools directly.
 
@@ -108,42 +108,26 @@ The rule that prevents mess:
 
 ## Skill And DT MCP Relationship
 
-Skills are the operating method. DT MCP tools provide the deterministic atomic mechanics each skill composes. The full DT MCP tool surface is described by the tool schemas themselves; see [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the mapping from any retired `pkim <verb>` mentions to the DT MCP tool.
+Skills are the operating method. DT MCP tools provide the deterministic mechanics each skill composes. See [../design/07-runtime.md](../design/07-runtime.md) for how the four skills relate to DT MCP.
 
-| Need | Skill | Composes these DT MCP tools |
-| --- | --- | --- |
-| Runtime readiness | `dt-health-check` | `is_running`, `get_databases`, `list_custom_metadata_fields` |
-| Inbox triage | `dt-sweep-inbox` | `search_records`, `get_record_properties`, `set_record_custom_metadata`, `move_record` |
-| Record profiling | `dt-profile-record` | `get_record_properties`, `get_record_text`, `get_record_tags` |
-| Metadata writeback | `dt-apply-approved-metadata` | `set_record_custom_metadata` (`mode="merge"`) |
-| Knowledge note creation | `dt-build-knowledge-note` | `create_record`, `set_record_custom_metadata`, `update_record_content`, `set_record_tags` |
-| Relation note creation | `dt-build-relation-note` | `create_record`, `set_record_custom_metadata`, `update_record_content` |
-| Filing | `dt-safe-file` | `move_record` (never `replicate_record`) |
-| Graph audit | `dt-audit-graph-corpus` | `search_records`, `get_record_text`, `get_record_properties` |
-| Mirror refresh | `dt-sync-export-mirror` | `get_record_properties`, `get_record_text`, `update_record_content`, `get_imported_record_path` |
-| Bootstrap canonical setup | `dt-bootstrap-pkim` | `create_group_path`, `create_record type="group"/smart-group`, `search_records` for verification |
+| Need | Skill | Notes |
+|---|---|---|
+| Session-start orientation, or preflight | `pkim-primer` | Read once per session; establishes vocabulary and rules |
+| Install / repair canonical config | `dt-bootstrap` | Fires only when preflight surfaces a gap |
+| Inbox sweep, per-record enrichment, filing | `dt-intake` | Subagent-per-record fan-out |
+| Graph-health audit (endpoints, zombies, contradictions, orphans, discipline) | `dt-audit` | Weekly or after retirements |
 
 If a skill's result is insufficient, improve the skill. There is no PKIM-owned runtime to extend.
 
 ## Weekly Or Batch Review
 
-Run the audit skills after a material batch of inbox processing or note creation:
-
-- `dt-audit-graph-corpus` — broken relation endpoints, missing relation metadata, duplicate relations, orphan notes.
-- `dt-sync-export-mirror` — mirror drift, indexed-file divergence.
-- (If defined) queue-health review via `search_records` against the canonical smart groups.
-
-If graph audit finds issues, use `dt-audit-graph-corpus` and a repair skill (`dt-execute-repair-plan`). Do not patch graph structure casually from raw tool output.
+Run `dt-audit` after a material batch of inbox processing or note creation. It walks the six finding classes (broken RL endpoints, zombie claims, corpus contradictions, dangling WikiLinks, orphans, discipline violations) and surfaces a ranked findings list. Human triage decides what to fix.
 
 ## Mirror Rhythm
 
-The mirror is a portability surface, not canonical state.
+The mirror is passive: `PKIM-Knowledge` is indexed against its iCloud-synced on-disk root. Every KN/RL/CL is already a `.md` file on disk. Writes via DT MCP keep the file coherent — there is no separate mirror sync workflow.
 
-The `dt-sync-export-mirror` skill composes:
-
-- `get_imported_record_path` — read the disk path for an indexed record.
-- `get_record_text` — read canonical body.
-- `update_record_content` — write back through DT (which keeps indexed files coherent).
+If disk-side drift ever appears (the `Mirror Drift` smart group is non-empty), DEVONthink's `Update Indexed Items` reconciles.
 
 ## Where Evidence Lands
 
@@ -179,7 +163,7 @@ Before the full deep pass, at least one already-processed source must be rerun t
 
 For that rerun:
 
-1. Rerun `dt-profile-record` on the source.
+1. Rerun `dt-intake` scoped to the single record (or invoke the per-record subagent brief manually) — the intake profile step is what you're testing.
 2. Compare candidate fingerprints against the previous run.
 3. Confirm main candidates are stable.
 4. Confirm existing notes are resolved rather than duplicated.
@@ -227,9 +211,9 @@ Stop and inspect before continuing when:
 - a DT MCP write returns an error or the tool's post-write read-back doesn't match the intended change
 - a relation note cannot resolve source or target
 - graph audit finds broken endpoints
-- `dt-safe-file` proposes a generic destination
+- `dt-intake` proposes a generic filing destination that isn't on the allowlist
 - an indexed record is about to be moved
 - a queue suddenly changes in a way the current run cannot explain
 - a skill and a DT MCP response disagree about what should happen next
 
-Use `dt-recover-failed-write` for failed or partial writes.
+For failed or partial writes: flip the record's `review_state` to `error`, surface via the `Automation Error` smart group, investigate before any re-run. DT MCP's verify-read on writes usually surfaces the problem; the record is left in a coherent partial state, not corrupted.

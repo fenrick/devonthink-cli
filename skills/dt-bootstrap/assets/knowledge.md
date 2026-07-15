@@ -14,7 +14,7 @@ PrimaryTopic: {{topic}}
 
 ## Claims
 
-<!-- Structured claim block per docs/design/18-evidence-discipline-and-claims.md -->
+<!-- Structured claim block: each claim carries `claim`, `type` (fact / inference / assumption / open-question), `confidence` (low / medium / high), and `evidence` (list of item links). See pkim-primer/references/record-classes.md §CL and the claim-authoring rules in the dt-intake references. -->
 
 ## Evidence links
 

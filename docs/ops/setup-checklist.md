@@ -1,6 +1,6 @@
 # DEVONthink Pilot Setup Checklist
 
-> **Runtime note (2026-07-15).** Any `pkim <verb>` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces it.
+> **Runtime note (2026-07-15).** Any `pkim <verb>` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../design/07-runtime.md](../design/07-runtime.md) for how skills compose DT MCP.
 
 ## Purpose
 
@@ -8,7 +8,7 @@ This checklist gets the local DEVONthink pilot surface into a state where PKIM c
 
 Use it when building or repairing the DEVONthink baseline: databases, group structure, custom metadata, smart groups, and local version evidence.
 
-It is an execution checklist, not the canonical schema contract. If this checklist ever conflicts with [../design/08-record-and-note-specification.md](../design/08-record-and-note-specification.md), the design spec wins and this checklist should be corrected.
+It is an execution checklist, not the canonical schema contract. If this checklist ever conflicts with [../design/03-record-and-note-specification.md](../design/03-record-and-note-specification.md), the design spec wins and this checklist should be corrected.
 
 ## How To Use
 
@@ -41,23 +41,16 @@ Open DEVONthink Pro. For each database below:
 
 ---
 
-## Part 2 — Create the group structure (scripted)
+## Part 2 — Create the group structure
 
-With all databases open in DEVONthink, run from the repo root:
+With all databases open in DEVONthink, invoke the [`dt-bootstrap`](../../skills/dt-bootstrap/SKILL.md) skill. It:
 
-```bash
-osascript scripts/setup-database-groups.applescript
-```
+- Creates the canonical group tree in every open canonical database (idempotent — existing groups are reported as `already-present`).
+- Auto-registers any missing custom metadata fields against a scratch record in `PKIM-Pilot`.
+- Installs the ten canonical text-predicate smart groups.
+- Installs the four note templates under `PKIM-Knowledge/Templates`.
 
-Review the output. Every line should show `+` (created) or exist silently. Any `✗` line means the database was not found — check that it is open in DEVONthink and re-run.
-
-Verify the result:
-
-```bash
-osascript scripts/verify-database-setup.applescript
-```
-
-Expected: `Fail: 0` and "All checks passed."
+Review the report. Every database should show `groups <N/N>` with no `error` entries. Any missing entry usually means the database was not open in DEVONthink — open it and re-run (the skill is idempotent).
 
 ---
 
@@ -189,9 +182,9 @@ Expected output: `"result": "ok"` with the correct database names shown.
 ## Done condition
 
 All of the following are true:
-- [ ] All 5 databases exist and are open in DEVONthink
-- [ ] `PKIM-Pilot` path does not contain any cloud-sync directory
-- [ ] `osascript scripts/verify-database-setup.applescript` returns `Fail: 0`
-- [ ] All 30 metadata fields appear in the DEVONthink inspector for any record
-- [ ] `uv run --project . pkim health-check --format json` returns `"result": "ok"`
-- [ ] `docs/ops/compatibility-matrix.md` is filled in with real version numbers
+- [ ] All 5 databases exist and are open in DEVONthink.
+- [ ] `PKIM-Pilot` path does not contain any cloud-sync directory.
+- [ ] `dt-bootstrap` completes without any `error` entries in its report.
+- [ ] All canonical metadata fields appear in `mcp__devonthink__list_custom_metadata_fields`.
+- [ ] `mcp__devonthink__is_running` returns `{running: true}` and `get_databases` shows all five canonical names.
+- [ ] `docs/ops/compatibility-matrix.md` is filled in with current version numbers.

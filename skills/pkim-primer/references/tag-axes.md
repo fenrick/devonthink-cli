@@ -50,7 +50,7 @@ Topical axes (open vocabulary, shared across the corpus, all record classes):
 
 ## Audit support
 
-`pkim audit-discipline` should produce a `missing-tags` finding when any record lacks its structural minimum or has no topical tags. See [19 Synthesis Uplift Plan](../../docs/design/19-synthesis-uplift-plan.md) backlog.
+The [`dt-audit`](../../dt-audit/SKILL.md) skill's discipline check produces a `missing-tags` finding when any record lacks its structural minimum or has no topical tags.
 
 ## Linked skills (must include a "Tagging" step pointing here)
 

@@ -1,87 +1,64 @@
 # PKIM Documentation Map
 
-> **Runtime note (2026-07-15).** The current runtime is DEVONthink 4.3+'s in-app MCP server; skills compose its tools directly. See [design/24-dt-mcp-adoption.md](design/24-dt-mcp-adoption.md). Earlier docs frequently reference a PKIM-owned `pkim` binary or Python runtime — those are historical. Doc 24 §"Coexistence / replacement table" maps every retired `pkim <verb>` to its DT MCP replacement.
-
 ## Purpose
 
-This folder is the map for operating PKIM as a knowledge operating system.
+Map for operating PKIM as a knowledge operating system. Start with the smallest layer that answers the current question; load deeper contracts only when the task requires them.
 
-An operator or LLM should not need to read every document before acting. Start with the smallest layer that answers the current question, then load deeper contracts only when the task requires them.
+Two document trees live under `docs/`:
 
-## End-To-End Story
+- **`design/`** — evergreen contracts. What PKIM is, why it's shaped this way, what won't be violated. Nine numbered docs, indexed at [design/README.md](design/README.md).
+- **`ops/`** — operating runbooks. Session cadence, local environment, per-database policy, restore drill. Indexed at [ops/README.md](ops/README.md).
+
+Skills in `skills/` are self-contained and don't link out to these docs — the operational content lives inside each skill's own `references/`. Design docs and ops docs are for orientation and discipline, not per-session workflow.
+
+## End-to-end story
 
 PKIM exists to turn incoming material into durable, linked, reviewable knowledge:
 
-1. material arrives in DEVONthink
-2. the inbox is swept and each record is profiled
-3. metadata, tags, names, candidate notes, and candidate destinations are developed while the record is still reviewable
-4. knowledge notes describe what the material means
-5. relation notes make important graph edges explicit
-6. graph checks find missing or weak connections
-7. records are renamed and filed only after semantic enrichment is complete
-8. mirrors, run artifacts, and tests make the system portable and auditable
+1. Material arrives in DEVONthink.
+2. The inbox is swept; each record is profiled.
+3. Metadata, tags, names, candidate notes, and destinations are developed while the record is still reviewable.
+4. Knowledge notes describe what the material means.
+5. Relation notes make important graph edges explicit.
+6. Graph checks find missing or weak connections.
+7. Records are renamed and filed only after semantic enrichment is complete.
+8. The on-disk indexed root of `PKIM-Knowledge` keeps the whole thing portable.
 
-The LLM layer performs judgement through skills. DEVONthink's in-app MCP server (v4.3+) performs the bounded deterministic reads, writes, validation, and extraction. DEVONthink remains canonical for records, notes, metadata, queues, groups, and item links.
+The LLM layer performs judgement through skills. DEVONthink's in-app MCP server (v4.3+) performs the bounded reads, writes, validation, and extraction. DEVONthink remains canonical for records, notes, metadata, queues, groups, and item links.
 
-## Progressive Disclosure Contract
+## Task-based loading
 
-Every operating document should answer only the level it owns:
+| Task | Start with | Load next |
+|---|---|---|
+| Understand the project | [../README.md](../README.md) | [ops/repo-operating-model.md](ops/repo-operating-model.md), [design/README.md](design/README.md) |
+| Start a work session | `skills/pkim-primer/SKILL.md` | [ops/operating-rhythm.md](ops/operating-rhythm.md) |
+| Process inbox records | `skills/dt-intake/SKILL.md` | [design/05-workflows.md](design/05-workflows.md) if intent needed |
+| Audit graph health | `skills/dt-audit/SKILL.md` | [design/05-workflows.md](design/05-workflows.md) Workflow 6 |
+| Install / repair config | `skills/dt-bootstrap/SKILL.md` | [design/04-devonthink-operating-model.md](design/04-devonthink-operating-model.md) |
+| Understand a record class or field | [design/02-information-model.md](design/02-information-model.md), then [design/03-record-and-note-specification.md](design/03-record-and-note-specification.md) | — |
+| Change the model | [design/README.md](design/README.md) then the relevant numbered doc | ripple to skills |
 
-| Level | It should explain | It should not duplicate |
-| --- | --- | --- |
-| Map | where to start and what to load next | command details or schema tables |
-| Operating guide | why the workflow exists and how to run it | low-level implementation internals |
-| Design contract | stable model, authority, safety, and state rules | session-by-session procedure |
-| Skill | agent judgement, sequencing, stop rules, and output shape | command implementation details |
-| Script or command doc | inputs, outputs, artifacts, and failure modes | LLM reasoning method |
-
-If two pages need the same fact, one page owns the fact and the other links to it. Repeating canonical metadata, workflow order, or command behaviour in several places is drift waiting to happen.
-
-## Context Layers
+## Context layers
 
 | Layer | Read when | Documents |
-| --- | --- | --- |
-| Orientation | You need to understand what this project is | [../README.md](../README.md), [ops/repo-operating-model.md](ops/repo-operating-model.md) |
-| Operating rhythm | You need to run a session or decide what to do next | [ops/operating-rhythm.md](ops/operating-rhythm.md), [ops/README.md](ops/README.md) |
-| Workflow method | You need to process records or notes | [design/05-workflows.md](design/05-workflows.md), [ops/intake-runbook.md](ops/intake-runbook.md) |
-| Skill method | You need agent behaviour and safety boundaries | [../skills/README.md](../skills/README.md), [design/11-agent-skills-and-runbooks.md](design/11-agent-skills-and-runbooks.md) |
-| System contract | You need authoritative model or metadata detail | [design/README.md](design/README.md), [design/08-record-and-note-specification.md](design/08-record-and-note-specification.md) |
-| Implementation detail | You need to change how skills call DT MCP | [design/24-dt-mcp-adoption.md](design/24-dt-mcp-adoption.md), the relevant `skills/*/SKILL.md` |
+|---|---|---|
+| Orientation | Understanding what this project is | [../README.md](../README.md), [ops/repo-operating-model.md](ops/repo-operating-model.md) |
+| Design intent | Deciding whether an idea fits PKIM | [design/README.md](design/README.md) |
+| Operating cadence | Running a session, deciding what to do next | [ops/README.md](ops/README.md), [ops/operating-rhythm.md](ops/operating-rhythm.md) |
+| Skill procedure | Executing a workflow | `skills/README.md` and the four `skills/*/SKILL.md` |
+| Model or schema detail | Authoring a record, understanding a field | [design/02-information-model.md](design/02-information-model.md), [design/03-record-and-note-specification.md](design/03-record-and-note-specification.md) |
+| Term lookup | Not sure what something means | [design/09-glossary.md](design/09-glossary.md) |
 
-## Canonical Detail Owners
-
-| Detail | Canonical owner |
-| --- | --- |
-| Folder purpose and repo role | [ops/repo-operating-model.md](ops/repo-operating-model.md) |
-| Daily operating cadence | [ops/operating-rhythm.md](ops/operating-rhythm.md) |
-| Inbox-to-graph workflow | [design/05-workflows.md](design/05-workflows.md), [ops/intake-runbook.md](ops/intake-runbook.md) |
-| Metadata, note, relation, and mirror schema | [design/08-record-and-note-specification.md](design/08-record-and-note-specification.md) |
-| Skill catalogue and skill/script boundary | [../skills/README.md](../skills/README.md), [design/11-agent-skills-and-runbooks.md](design/11-agent-skills-and-runbooks.md) |
-| Command implementation architecture | [design/09-automation-architecture.md](design/09-automation-architecture.md) |
-| Historical build state and backlog | [ops/build-plan.md](ops/build-plan.md) |
-
-## Task-Based Loading
-
-| Task | Start with | Load next only if needed |
-| --- | --- | --- |
-| Understand the project | [../README.md](../README.md) | [ops/repo-operating-model.md](ops/repo-operating-model.md), [design/README.md](design/README.md) |
-| Start a work session | [ops/operating-rhythm.md](ops/operating-rhythm.md) | [ops/capability-probe.md](ops/capability-probe.md), [ops/local-environment.md](ops/local-environment.md) |
-| Process inbox records | [ops/intake-runbook.md](ops/intake-runbook.md) | [design/05-workflows.md](design/05-workflows.md), `skills/dt-sweep-inbox`, `skills/dt-profile-record` |
-| Create knowledge notes | `skills/dt-build-knowledge-note` | [design/08-record-and-note-specification.md](design/08-record-and-note-specification.md), [design/11-agent-skills-and-runbooks.md](design/11-agent-skills-and-runbooks.md) |
-| Create relation notes | `skills/dt-build-relation-note` | [design/05-workflows.md](design/05-workflows.md), [design/08-record-and-note-specification.md](design/08-record-and-note-specification.md) |
-| File or move records | `skills/dt-safe-file` | [ops/intake-runbook.md](ops/intake-runbook.md), [design/07-devonthink-operating-model.md](design/07-devonthink-operating-model.md) |
-| Audit graph health | `skills/dt-audit-graph-corpus` | [ops/operating-rhythm.md](ops/operating-rhythm.md), [design/05-workflows.md](design/05-workflows.md) |
-| Debug a failed write | `skills/dt-recover-failed-write` | [ops/operating-rhythm.md](ops/operating-rhythm.md), [design/06-operations-and-safety.md](design/06-operations-and-safety.md) |
-| Change code | [design/09-automation-architecture.md](design/09-automation-architecture.md) | [design/14-implementation-work-packages.md](design/14-implementation-work-packages.md), relevant tests |
-
-## Reading Rule
+## Reading rule
 
 Load broad context first, then narrow contracts:
 
-1. read the orientation paragraph or table
-2. identify the workflow or skill
-3. load only the relevant skill/runbook
-4. load design specs only when changing contracts or resolving ambiguity
-5. load implementation files only when editing code
+1. Read the orientation for what you need.
+2. Identify the workflow or skill.
+3. Load only the relevant skill or design doc.
+4. Load reference tables only when the current task touches them.
+5. If a task requires reading the whole docs tree, the documentation structure has failed.
 
-If a task requires reading the whole docs tree, the documentation structure has failed.
+## Progressive disclosure
+
+Design docs describe intent (shape, principle, non-negotiables). Skills carry procedure (workflow, sequencing, judgement). Ops docs describe cadence and environment. Terms are defined once, in the glossary. If two pages need the same fact, one page owns it and the other links.

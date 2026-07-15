@@ -1,6 +1,6 @@
 # Compatibility Matrix
 
-> **Runtime note (2026-07-15).** Any `pkim <verb>` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces it.
+> **Runtime note (2026-07-15).** Any `pkim <verb>` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../design/07-runtime.md](../design/07-runtime.md) for how skills compose DT MCP.
 
 ## Purpose
 
@@ -74,7 +74,7 @@ All 30 fields must be defined in DEVONthink Settings > Data > Custom Metadata be
 
 ## Approved Command Surface
 
-The approved command surface is DEVONthink 4.3+'s in-app MCP server. Full doctrine: [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md). The tool set is what DEVONthink ships; the coexistence table there maps every retired `pkim <verb>` to its DT MCP equivalent.
+The approved command surface is DEVONthink 4.3+'s in-app MCP server. Full doctrine: [../design/07-runtime.md](../design/07-runtime.md). The tool set is what DEVONthink ships; the coexistence table there maps every retired `pkim <verb>` to its DT MCP equivalent.
 
 Skills call DT MCP tools by name (e.g. `mcp__devonthink__get_record_properties`, `mcp__devonthink__set_record_custom_metadata`). There is no PKIM-owned CLI or runtime layer.
 

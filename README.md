@@ -17,7 +17,7 @@ The system is a document-and-link graph with structured relation notes. It is no
 
 ## Runtime
 
-DEVONthink 4.3+ ships an in-app MCP server. That is the runtime PKIM composes; there is no PKIM-owned binary. Skills call DT MCP tools directly (`get_record_properties`, `set_record_custom_metadata`, `update_record_content`, `search_records`, etc.). See [docs/design/24-dt-mcp-adoption.md](docs/design/24-dt-mcp-adoption.md) for the adoption reasoning and the earlier-runtime supersession trail.
+DEVONthink 4.3+ ships an in-app MCP server. That is the runtime PKIM composes; there is no PKIM-owned binary. Skills call DT MCP tools directly (`get_record_properties`, `set_record_custom_metadata`, `update_record_content`, `search_records`, etc.). See [docs/design/07-runtime.md](docs/design/07-runtime.md) for how skills compose DT MCP.
 
 Requirements: macOS Sequoia or later, DEVONthink 4.3+ (Pro edition for MCP), an MCP-capable AI client (Claude Code, Codex CLI, etc.).
 
@@ -30,7 +30,7 @@ If you are new to the folder, read in this order:
 3. [docs/ops/operating-rhythm.md](docs/ops/operating-rhythm.md) — how day-to-day work runs.
 4. [docs/ops/intake-runbook.md](docs/ops/intake-runbook.md) — how inbox material is processed.
 5. [docs/design/README.md](docs/design/README.md) — the full design register.
-6. [docs/design/24-dt-mcp-adoption.md](docs/design/24-dt-mcp-adoption.md) — how skills compose DT MCP.
+6. [docs/design/07-runtime.md](docs/design/07-runtime.md) — how skills compose DT MCP.
 7. [skills/README.md](skills/README.md) — how agent skills structure the workflow.
 
 For task-specific work, do not read the whole documentation tree first. Use [docs/README.md](docs/README.md) to load the smallest useful context set.
@@ -60,10 +60,10 @@ Think of the project as five connected layers:
 
 | Layer | What it does | Where to start |
 | --- | --- | --- |
-| Canonical store | DEVONthink databases, records, custom metadata, groups, smart groups, item links | [docs/design/07-devonthink-operating-model.md](docs/design/07-devonthink-operating-model.md) |
-| Knowledge model | Evidence, knowledge notes, relation notes, frontmatter, metadata, mirror rules | [docs/design/08-record-and-note-specification.md](docs/design/08-record-and-note-specification.md) |
+| Canonical store | DEVONthink databases, records, custom metadata, groups, smart groups, item links | [docs/design/04-devonthink-operating-model.md](docs/design/04-devonthink-operating-model.md) |
+| Knowledge model | Evidence, knowledge notes, relation notes, frontmatter, metadata, mirror rules | [docs/design/03-record-and-note-specification.md](docs/design/03-record-and-note-specification.md) |
 | Workflow method | Human-plus-agent operating flows from inbox to graph to mirror | [docs/design/05-workflows.md](docs/design/05-workflows.md) |
-| Execution surface | Skills composing the DEVONthink 4.3+ MCP server tools | [docs/design/24-dt-mcp-adoption.md](docs/design/24-dt-mcp-adoption.md) |
+| Execution surface | Skills composing the DEVONthink 4.3+ MCP server tools | [docs/design/07-runtime.md](docs/design/07-runtime.md) |
 | Operating rhythm | The repeatable cadence for checking queues, processing inboxes, repairing graph issues, and refreshing mirrors | [docs/ops/operating-rhythm.md](docs/ops/operating-rhythm.md) |
 
 ## How Work Moves
@@ -108,7 +108,7 @@ Use [docs/ops/intake-runbook.md](docs/ops/intake-runbook.md) for the detailed in
 - Ops index: [docs/ops/README.md](docs/ops/README.md)
 - Operating rhythm: [docs/ops/operating-rhythm.md](docs/ops/operating-rhythm.md)
 - Design register: [docs/design/README.md](docs/design/README.md)
-- Runtime brief: [docs/design/24-dt-mcp-adoption.md](docs/design/24-dt-mcp-adoption.md)
+- Runtime brief: [docs/design/07-runtime.md](docs/design/07-runtime.md)
 - Inbox workflow: [docs/ops/intake-runbook.md](docs/ops/intake-runbook.md)
 
 ## Agent Entry Points

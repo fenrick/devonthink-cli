@@ -2,349 +2,195 @@
 
 ## Purpose
 
-This document defines only the operational workflows of the PKIM.
+The repeatable flows that move records through PKIM. Each workflow is a shape — a sequence of states and decisions — that a human or a skill executes. The skill catalogue in `skills/README.md` names the concrete tools; this document says what the flow *is*, so the shape survives even as the tool surface changes.
 
-It answers one question:
+## Workflow set
 
-What are the repeatable human-plus-automation flows that move records through the system?
+1. **Ingest and profile** — new evidence → known record with baseline identity.
+2. **Enrich reviewed evidence** — profiled record → tagged, metadata-stamped, filed.
+3. **Evidence to knowledge** — approved evidence → knowledge note (optionally with claim ledger + relation notes).
+4. **Relation maintenance** — surface + author RL records for meaningful edges.
+5. **Portable mirror** — the on-disk indexed root of `PKIM-Knowledge` *is* the mirror; no separate workflow. Skills write via DT MCP; DEVONthink keeps the disk file coherent.
+6. **Graph-health audit** — periodic corpus-wide check for broken endpoints, zombies, contradictions, orphans.
+7. **Periodic claim audit** — stress-test published synthesis at a regular cadence.
 
-It does not define:
+The intake skill runs Workflows 1 + 2 (and touches 3 + 4 opportunistically). The audit skill runs Workflows 6 + 7. There is no separate skill for mirror refresh because there is no separate mirror.
 
-- capability readiness checkpoints
-- implementation sequencing
-- the automation architecture
-- the detailed metadata or note specification
+## Workflow 1 — Ingest and profile
 
-Those live elsewhere.
+**Purpose.** Turn a new evidence object into a known record with identity, baseline metadata, and a preliminary read while it's still in `/Inbox`.
 
-## Workflow Set
+**Triggers.** New imported evidence; newly captured web archive / bookmark / scan; a manually captured record that has never been profiled.
 
-The PKIM has five core workflows:
+**Steps.**
 
-1. ingest and profile
-2. enrich reviewed evidence
-3. evidence to knowledge
-4. relation maintenance
-5. mirror refresh
+1. Confirm runtime health (DT running, target database open, custom metadata schema present).
+2. Read the record's properties, content, and any existing tags.
+3. Mint `PKIM_ID` if absent (`EV-YYYYMMDD-NNNN`).
+4. Classify: almost always EV. If it looks like a KN/RL/CL in the inbox, something has come in wrong — surface as `needs-human`.
+5. Produce a read-only record-context packet: proposed topic tags, likely filing destination, candidate KN directions if any.
+6. Set the review outcome (`profiled` or `needs-human`) outside the profiling step itself — profiling is read-only.
 
-Each workflow should be executable by an operator using the same local command surface whether the caller is Claude Code or Codex CLI.
+**Exit condition.** The record is known enough to enter enrichment. Profiling alone does not imply final filing.
 
-## Workflow Map
+## Workflow 2 — Enrich reviewed evidence
 
-Use this table before reading the detailed workflow sections.
+**Purpose.** Turn a profiled record into a curated, tagged, filed evidence record before it leaves `/Inbox`.
 
-| If the task is... | Read | Then use |
-| --- | --- | --- |
-| New or unprocessed material | Workflow 1 and Workflow 2 | `dt-sweep-inbox`, `dt-profile-record`, `dt-apply-approved-metadata` |
-| Turning evidence into notes | Workflow 3 | `dt-resolve-canonical-note`, `dt-build-knowledge-note` |
-| Wiring notes together | Workflow 4 and Workflow 5 | `dt-build-relation-note`, `dt-reconcile-relation-edge`, `dt-audit-graph-corpus` |
-| Exporting portable notes | Workflow 6 | `dt-sync-export-mirror` |
-| Deciding if records can move | Workflow 2 plus intake runbook | `dt-safe-file` |
+**Triggers.** A profiled evidence record is low-risk enough to continue. The operator wants a single-pass outcome.
 
-The detailed sections below are reference material. Load only the workflow matching the current state transition.
+**Steps.**
 
-## Workflow 1: Ingest And Profile
+1. Review the profile packet while the record is still in `/Inbox`.
+2. Derive a better human title if the ingest title is weak.
+3. Apply structural + topical tags per the tag axes discipline.
+4. Write approved custom metadata (`docrole`, `evidencestatus`, `capturetype`, `origin_uri`, `primarytopic`, `review_state=approved`).
+5. Update the `Aliases` field to include `PKIM_ID`.
+6. Decide whether a KN authoring pass should happen now (see Workflow 3) or later.
+7. Move the record to its filing destination via `move_record`.
+8. Set `review_state` to `filed`.
 
-### Purpose
+**Exit condition.** Either the record is `filed` in its long-term location with metadata + tags settled, OR it's flagged `needs-human` with a clear reason.
 
-Turn a new evidence object into a known record with identity, baseline metadata, and a review packet while it still remains in `/Inbox/`.
+**The two operate together.** In practice `dt-intake` runs Workflows 1 + 2 in one per-record subagent pass.
 
-### Trigger
+## Workflow 3 — Evidence to knowledge
 
-- new imported evidence
-- newly indexed parent-root content
-- captured bookmark or web archive
-- manually selected existing record that has never been profiled
+**Purpose.** Create or update a native knowledge note from approved evidence.
 
-### Inputs
-
-- target evidence record
-- target database
-- runtime and environment context
-
-### Steps
-
-1. confirm runtime health
-2. read record properties and content
-3. assign or confirm `PKIM_ID`
-4. produce a read-only record-context packet
-5. use the profiling skill to propose tags, possible filing locations, likely related items, and candidate knowledge-note directions
-6. set review outcome outside the profile command itself
-
-### Outputs
-
-- read-only record-context packet
-- skill-derived suggested tags, with `source.*` as the default provenance layer when origin is clear
-- skill-derived possible filing locations
-- skill-derived related items
-- skill-derived candidate knowledge-note directions
-- risk notes
-
-### Exit condition
-
-The record is known enough to enter an enrichment pass. Profiling alone does not imply final filing.
-
-## Workflow 2: Enrich Reviewed Evidence
-
-### Purpose
-
-Develop a profiled evidence record into a useful curated object before it leaves the inbox review surface.
-
-### Trigger
-
-- a profiled evidence record is low-risk enough to continue
-- the operator wants a single-pass review outcome rather than a bare metadata update
-
-### Inputs
-
-- profiled evidence record
-- profile packet
-- operator judgement about usefulness, risk, and destination
-
-### Steps
-
-1. review the profile output while the record is still in `/Inbox/`
-2. decide whether the record is worth deeper capture, should remain profiled, or needs human review
-3. derive a better human title when the ingest title is weak
-4. derive tags, aliases, and a real browseable destination path
-5. decide whether low-risk note creation should happen now
-6. if yes, create or update the relevant knowledge note(s)
-7. attach stable DEVONthink item links between evidence and notes
-8. write approved metadata and retrieval aids
-9. rename and move the evidence record only after the semantic work is in place
-
-### Outputs
-
-- reviewed title
-- tags and aliases
-- approved destination path
-- optional knowledge note(s)
-- evidence-to-knowledge links
-- curated evidence record ready for browsing and graph use
-
-### Exit condition
-
-The record is either:
-
-- still in `/Inbox/` with a clear review state and next action, or
-- renamed, linked, and moved to a deliberate long-term location
-
-## Workflow 3: Evidence To Knowledge
-
-### Purpose
-
-Create or update a native knowledge note from approved evidence.
-
-### Trigger
-
-- a profiled evidence record is worth interpreting
-- a topic or project note needs new source-backed content
-
-### Inputs
-
-- approved evidence record or topic context
-- desired note type
-- title or scope hint
+**Triggers.** A profiled evidence record is worth interpreting; a topic or project note needs new source-backed content.
 
 ### Candidate triage checkpoint
 
-Before any candidate creates or updates a note, review the concept set for graph bloat risk.
-
-Only candidates with all of the following proceed automatically:
+Before creating a KN, review the concept set for graph bloat. Only candidates with **all** of the following proceed automatically:
 
 - `candidate_class = canonical-note-candidate`
 - `note_worthiness = high`
 - `distinctness = distinct`
 - `graph_value = node`
 
-Candidates with `medium`, `overlapping`, `embedded`, `edge-support`, `local-detail`, `supporting-detail`, or `evidence-for-other-note` classification remain recorded in the candidate ledger but are deferred unless explicitly elevated by the operator. Deferred candidates are not silently dropped — they must appear in the ledger with a triage outcome of `deferred`.
-
-This checkpoint applies at the handoff between `dt-profile-record` and `dt-resolve-canonical-note`.
+Candidates classified `medium`, `overlapping`, `embedded`, `edge-support`, `local-detail`, `supporting-detail`, or `evidence-for-other-note` are recorded in the candidate ledger and deferred unless the operator explicitly elevates them. Deferred candidates are not silently dropped — they must appear with a triage outcome of `deferred`.
 
 ### Steps
 
-1. confirm source evidence is profiled
-2. apply the candidate triage checkpoint — confirm which candidates pass before proceeding
-3. select note type for each passing candidate
-4. **Pass 3 — Triangulate.** Run [`dt-build-claim-ledger`](../../skills/dt-build-claim-ledger/SKILL.md) over the accepted candidate's EV shortlist. The output is the run-artefact at `runs/<run-id>/claim-ledger.md` per the contract in [18 Evidence Discipline And Claims](18-evidence-discipline-and-claims.md). The operator (human or LLM) reviews the ledger before continuing.
-5. create or update native note per candidate, in dependency order, writing the accepted claim entries verbatim into the KN's `## Claims` section
-6. attach stable links back to evidence
-7. refresh aliases and note metadata
-8. queue or execute mirror refresh
+1. Confirm the source evidence is profiled.
+2. Apply the candidate triage checkpoint. Only accepted candidates proceed.
+3. Select the note type (`literature` / `synthesis` / `topic` / `project`) for each accepted candidate.
+4. **Pass 3 — Triangulate.** Build a claim ledger from the EV shortlist: identify candidate claims (fact / inference / assumption / open-question), classify their confidence, cite their evidence. The operator reviews the ledger before continuing.
+5. Create or update the native KN in dependency order. Write the accepted claim entries into the KN's `## Claims` section (either inline as the fenced YAML block, or promote to CL records when a claim needs individual addressability).
+6. Attach evidence back-references: `## Evidence links` with item links to the cited EVs.
+7. Refresh aliases and note metadata.
+8. If the new KN cites another KN or CL, author an RL — Workflow 4.
 
-### Outputs
+**Exit condition.** The KN exists in `PKIM-Knowledge`, is linked back to source evidence, and carries at least one structured claim when `KnowledgeStatus ∈ {reviewed, published}`.
 
-- native knowledge note with a populated `## Claims` section
-- stable item link
-- claim ledger run-artefact at `runs/<run-id>/claim-ledger.md`
-- optional mirror refresh artifact
+### Merge vs create
 
-### Exit condition
+Before authoring a fresh KN, check for a canonical KN on the same topic. Three shapes of check, cheapest first:
 
-The knowledge note exists natively in DEVONthink, is linked back to source evidence, and carries at least one structured claim block when `KnowledgeStatus ∈ {reviewed, published}`.
+- By URL / `origin_uri` — `lookup_records` for a KN that already references this source.
+- By topic — `search_records` for `mddocrole:knowledge mdprimarytopic:<topic>`.
+- By similarity — DEVONthink's `find_similar_records` against the source EV.
 
-## Workflow 4: Relation Maintenance
+If a canonical KN exists:
+- The EV adds to it → update the canonical KN (append claims, add evidence link, RL). Don't create a duplicate KN.
+- The EV contradicts it → author a new KN or CL with the counter-argument, author an RL of `Relation_Type=contradicts`, surface as `needs-human`.
+- The EV supersedes it → author an RL of `Relation_Type=supersedes`, surface as `needs-human` for triage of the old KN's status.
 
-### Purpose
+## Workflow 4 — Relation maintenance
 
-Create or revise explicit relation notes between records.
+**Purpose.** Make meaningful edges explicit as first-class RL records.
 
-### Trigger
+**Triggers.** A KN cites another record in a load-bearing way (supports, contradicts, extends, supersedes, etc.); two records need a maintained relationship; graph audit surfaces a missing relation.
 
-- a meaningful relationship is identified
-- an existing implicit relationship needs to become explicit
-- graph maintenance review shows missing or weak connections
+**Steps.**
 
-### Inputs
+1. Confirm both endpoints exist and are the intended pair.
+2. Check for a duplicate RL — same `Source_Item`, `Target_Item`, `Relation_Type` triplet.
+3. Mint `RL-YYYYMMDD-NNNN`.
+4. Compose the RL body: mandatory `# Why this relation exists` prose rationale; `## Endpoints` with two WikiLinks matching the item links; `## Evidence` when `Relation_Type ∈ {supports, contradicts, supersedes}`.
+5. Set metadata: `Source_Item`, `Target_Item`, `Relation_Type`, `relationstatus`, `relationconfidence`.
+6. Apply structural + topical tags (topical set inherits from both endpoints).
+7. File to `/Notes/Relations`.
 
-- source record
-- target record
-- relation type
-- rationale
+**Exit condition.** The RL exists, both endpoints resolve, the body has the mandatory rationale, and it appears in DEVONthink's graph traversal (See Also on the endpoints).
 
-### Steps
+### When NOT to author an RL
 
-1. confirm both records exist and are the intended pair
-2. create or update relation note
-3. add source and target item links
-4. add rationale and relation metadata
-5. refresh mirror if relation notes are mirrored
+- Every WikiLink in a KN body — WikiLinks are for readable prose; RLs are for the graph.
+- Every citation of an EV in `## Evidence links` — that's evidence linkage, not a semantic edge unless it's load-bearing.
+- A KN mentioning a related concept in passing — mention, not edge.
 
-### Outputs
+## Workflow 5 — Portable mirror
 
-- relation note
-- stable link to the relation note
+**Not a workflow.** `PKIM-Knowledge` is indexed against an iCloud-synced on-disk root. Every KN, RL, CL is already a `.md` file on disk with YAML frontmatter equivalent to its MMD header. External tooling reads from there.
 
-### Exit condition
+Skills write via DT MCP; DEVONthink keeps the on-disk file coherent with the database record. There is no separate "mirror" workflow to run.
 
-The relationship is expressed as a maintained record rather than an implied guess.
+Consequences:
 
-## Workflow 5: Post-Note Graph Pass
+- Portability is passive. Files on disk are always current with the database.
+- Filename convention: `<CLASS>-YYYYMMDD-NNNN-<slug>.md`.
+- The database and the disk root move together — moving one without the other breaks the index.
+- Cloud-sync latency applies. A KN written from device A may take seconds to appear on device B; skills that read across devices should tolerate this.
 
-### Purpose
+If disk-side drift is ever detected (a file edited outside DEVONthink), the `Mirror Drift` smart group surfaces it. DEVONthink's `Update Indexed Items` reconciles.
 
-Run a bounded graph-maintenance pass after note creation so the system produces connected knowledge, not just isolated literature notes.
+## Workflow 6 — Graph-health audit
 
-### Trigger
+**Purpose.** Confirm the corpus's graph is still coherent. Detect broken endpoints, dangling references, retired-evidence citations, contradictions, orphans.
 
-- one or more knowledge notes were just created or materially revised
-- a pilot batch needs neighbourhood cleanup
-- relation density or synthesis coverage is visibly lagging behind note creation
+**Triggers.** Weekly cadence; before scaling ingest; after a wave of EV retirements or supersessions; when a smart group produces suspicious results.
 
-### Inputs
+**Steps.** Walk the six finding classes:
 
-- `PKIM-Knowledge` note set
-- existing relation notes
-- linked evidence tags, folders, and summaries
+1. **Broken RL endpoints** — every RL's `Source_Item` / `Target_Item` resolves.
+2. **Zombie claims** — every KN's `## Claims` and every CL's `## Evidence` cites at least one non-retired EV.
+3. **Corpus contradictions** — two records asserting opposing conclusions on the same evidence.
+4. **Dangling WikiLinks** — `[[...]]` in KN/CL bodies that don't resolve inside the database.
+5. **Orphan records** — CLs without a resolvable parent KN; literature/synthesis KNs with no evidence; RLs with malformed endpoints.
+6. **Discipline violations** — untagged records; missing required metadata; RLs without prose rationale; published KNs without a `## Claims` block.
 
-### Steps
+**Severity.** Broken endpoints, zombies, and contradictions are high. Dangling WikiLinks and orphans are medium. Discipline violations are low.
 
-1. inspect approved literature and synthesis notes in a bounded 1-hop way
-2. identify missing literature-to-existing-synthesis links only where the synthesis already scopes those notes or the thematic overlap is explicit
-3. identify high-confidence shared-tag literature clusters that warrant a synthesis note
-4. materialise only the defensible synthesis notes and relation notes
-5. leave weaker thematic candidates as proposals rather than fake graph structure
+**Outputs.** A findings list ranked by severity. Auto-fix only two subsets: (a) dangling WikiLinks that unambiguously map to a cross-DB item link, (b) untagged CLs / RLs whose topical set is inheritable from their parent / endpoints. Everything else routes to human triage.
 
-### Outputs
+**Exit condition.** All six classes have been walked to their natural end. A partial audit that says "clean" is worse than no audit — always state scope explicitly.
 
-- graph-pass assessment
-- optional newly created synthesis notes
-- optional newly created relation notes
+## Workflow 7 — Periodic claim audit
 
-### Exit condition
+**Purpose.** Stress-test published synthesis. Surface zombie claims, missing evidence, weak confidence, and unresolved contradictions before they accumulate.
 
-The graph has been checked for obvious missing synthesis or relation structure and any safe, bounded fixes have been applied.
+**Triggers.** Monthly cadence; after a large EV supersession event; on demand before a publish wave.
 
-## Workflow 6: Mirror Refresh
+**Steps.**
 
-### Purpose
+1. Run the discipline audit (Workflow 6) to get the structural report.
+2. Walk the corpus for corpus-level contradictions.
+3. For each KN in scope (default: `KnowledgeStatus ∈ {reviewed, published}`), audit its `## Claims` block: verify every `fact` / `inference` claim's evidence resolves and is non-retired.
+4. Classify defects by severity. Route:
+   - `missing-claims` / `missing-evidence-link` → re-build the claim ledger.
+   - `corpus-contradiction` → human triage; both records may flip to `needs-human`.
+   - `dangling-wikilink` → resolve to correct target or item link.
+   - `zombie-claim` → review whether the claim still holds; possibly demote confidence or retire.
 
-Export native notes into the portable filesystem mirror.
+**Outputs.** A ranked findings list per KN. The audit doesn't apply fixes for the claim-specific findings — every one needs operator judgement.
 
-### Trigger
+**Exit condition.** Every published KN either passed the audit or has a triage decision recorded.
 
-- note creation or update
-- scheduled refresh
-- explicit operator request
-- drift detection
+## Workflow composition rules
 
-### Inputs
-
-- scope or changed-set
-- target export root
-
-### Steps
-
-1. identify notes to export
-2. render mirror files
-3. emit export manifest
-4. validate parseability and path placement
-5. report drift or failures
-
-### Outputs
-
-- updated mirror files
-- export manifest
-- drift or error report
-
-### Exit condition
-
-The mirror is a current portable projection of canonical native notes for the requested scope.
-
-## Workflow 7: Periodic Claim Audit
-
-### Purpose
-
-Stress-test published synthesis at a regular cadence to surface zombie claims, missing evidence, weak confidence, and corpus-level contradictions before they accumulate.
-
-### Trigger
-
-- monthly cron / operator-driven invocation
-- after a large EV supersession event (triggered indirectly by WP3.1's propagation)
-- on demand before a publish wave
-
-### Inputs
-
-- the corpus snapshot at the moment the audit runs
-- scope: by default, all KNs with `KnowledgeStatus ∈ {reviewed, published}`; can be narrowed by topic or by author
-
-### Steps
-
-1. run `pkim audit-discipline --database PKIM-Knowledge` to get the structural-discipline report (missing-claims, missing-evidence, dangling-wikilinks, etc.)
-2. run the mirror-side audit ([`dt-detect-contradictions`](../../skills/dt-detect-contradictions/SKILL.md)) to populate `runs/<run-id>/contradiction-register.md`
-3. for each KN in scope, run a stress-test pass over its `## Claims` block — produces per-note findings
-4. aggregate into a single `runs/<run-id>/defect-register.md` keyed by `record_pkim_id`
-5. classify defects by severity and propose remediation routes:
-   - `missing-claims` / `missing-evidence-link` → [`dt-build-claim-ledger`](../../skills/dt-build-claim-ledger/SKILL.md) re-run over the original EV set
-   - `corpus-contradiction` → human triage; possibly `needs-human` flag on the involved KNs
-   - `dangling-wikilink` → [`dt-resolve-canonical-note`](../../skills/dt-resolve-canonical-note/SKILL.md)
-   - `zombie-claim` (claim cites only retired EVs) → review whether the claim still holds
-
-### Outputs
-
-- `runs/<run-id>/defect-register.md` aggregating all findings
-- `runs/<run-id>/contradiction-register.md` (the persistent log, append-only)
-- queue entries on affected records pointing at the run
-
-### Exit condition
-
-The defect register exists, has been triaged into either `auto-route` or `needs-human` per finding, and no `KnowledgeStatus=published` record carries an open `high`-severity finding.
-
-## Workflow Composition Rules
-
-- Profiling happens before enrichment.
-- Enrichment decides title, tags, destination, and whether note creation should happen before filing.
-- Knowledge capture depends on profiled evidence or approved topic context.
-- A post-note graph pass should run before calling a note batch operationally complete.
+- Profiling before enrichment.
+- Enrichment before filing.
+- Knowledge capture requires profiled evidence.
+- A graph pass runs before calling a note batch operationally complete.
 - Relation maintenance depends on stable source and target records.
-- Mirror refresh follows canonical note changes, not the other way around.
+- The audit runs against the whole corpus, not against subsets — partial audits mislead.
 
-## Workflow Anti-Patterns
+## Anti-patterns
 
-Avoid:
-
-- using workflow documents to define readiness checkpoints
-- blending operator flow with backlog sequencing
-- treating mirror export as canonical authoring
-- treating `approved` as a synonym for "move it now"
-- filing unprofiled or semantically undeveloped items
+- Filing unprofiled or semantically undeveloped items.
+- Treating `approved` as a synonym for "move it now" — approval means "ready for the next bounded step".
+- Building custom queues when DEVONthink smart groups would work.
+- Sequencing an ad-hoc series of DT MCP calls that overlap a named workflow — invoke the workflow instead.
+- Declaring an audit "clean" on a partial walk.

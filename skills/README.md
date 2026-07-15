@@ -1,6 +1,6 @@
 # PKIM Skills
 
-> **Runtime.** DEVONthink 4.3+'s in-app MCP server. See [../docs/design/24-dt-mcp-adoption.md](../docs/design/24-dt-mcp-adoption.md).
+> **Runtime.** DEVONthink 4.3+'s in-app MCP server. Skills compose its tools directly; there is no PKIM-owned runtime layer.
 
 Four skills. Each is a named tool the LLM invokes explicitly — using named skills prevents the LLM from inventing its own version of a workflow. If you catch yourself composing ad-hoc DT MCP tool sequences that overlap one of these skills, invoke the skill instead.
 
@@ -52,7 +52,7 @@ Don't front-load references. Read them on demand.
 
 ## Why so few skills
 
-An earlier version of this directory had 26 skills built to sequence retired `pkim` atomic verbs. That layer is retired (see [../docs/design/24-dt-mcp-adoption.md](../docs/design/24-dt-mcp-adoption.md)). DEVONthink 4.3+'s MCP server is rich enough that most of what those skills orchestrated is now a single MCP tool call.
+An earlier version of this directory had 26 skills built to sequence a retired PKIM-owned CLI. That layer is gone; git history has the trail. DEVONthink 4.3+'s MCP server is rich enough that most of what those skills orchestrated is now a single MCP tool call.
 
 What remains are the four workflows that carry real judgement:
 

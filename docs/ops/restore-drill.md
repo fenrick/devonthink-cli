@@ -1,6 +1,6 @@
 # Restore Drill
 
-> **Runtime note (2026-07-15).** Any `pkim <verb>` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces it.
+> **Runtime note (2026-07-15).** Any `pkim <verb>` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../design/07-runtime.md](../design/07-runtime.md) for how skills compose DT MCP.
 
 ## Purpose
 
@@ -17,13 +17,13 @@ This is an operational check. It does not mutate the live database package.
 
 ## Status
 
-The compound `pkim restore-drill` and `pkim scale-readiness` Python verbs retired with the CLI-first pivot (see [../design/22-cli-first-atomic-primitives.md](../design/22-cli-first-atomic-primitives.md)). The drill is now expected to be performed by a skill workflow composing:
+The compound `pkim restore-drill` and `pkim scale-readiness` verbs retired with the earlier PKIM-owned runtime. The drill is now expected to be performed by a skill workflow composing:
 
 - `pkim probe-capabilities` — pre-flight that DT is running and the source database is open.
-- A shell step (or `dt-run-restore-drill` skill body) that copies the live package, opens the copy in DT, and runs `pkim verify-database <restore-test-name>` to confirm the canonical group tree is present in the restored copy.
+- A shell step that copies the live package, opens the copy in DT, and confirms the canonical group tree is present via `mcp__devonthink__get_group_tree` against the restored copy's UUID.
 - `pkim health-check --database <restore-test-name>` for the final pass/fail envelope.
 
-A native restore-drill verb is not in scope unless a real friction point re-emerges; see [doc 22 §Anti-patterns](../design/22-cli-first-atomic-primitives.md) before proposing one.
+A native restore-drill verb is not in scope unless a real friction point re-emerges — the current pattern is a skill workflow composing DT MCP tools plus a shell copy step.
 
 ## Inputs
 

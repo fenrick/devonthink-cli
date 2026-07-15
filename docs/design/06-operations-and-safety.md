@@ -2,154 +2,156 @@
 
 ## Purpose
 
-This document defines the operational safety policy for the PKIM.
+Write gates, review states, supersession rules, and the safety posture the whole system enforces. Every skill and every ad-hoc DT MCP composition honours the discipline described here.
 
-It answers:
+## Write gates
 
-What must be true before the system is allowed to read, write, recover, and continue operating safely?
+The write gate lives in DEVONthink. There is no PKIM-side override.
 
-It does not define:
+### Per-record — `Exclude from AI`
 
-- the repo file contract
-- the automation architecture
-- the build backlog
-- the detailed skill command surface
+Any record with the DEVONthink property `Exclude from AI` set:
 
-## Safety Model
+- Is filtered out of `search_records`, `find_similar_records`, `classify_record`, `chat_response`, and the link-traversal tools' result lists.
+- Refuses input to any DT MCP tool that names it — the tool returns an error rather than silently obeying.
 
-### Read-mostly by default
+Skills honour this automatically because DT MCP does. There is no bypass. If a workflow needs to touch a `-excluded` record, the human toggles the flag off in DEVONthink first.
 
-Search, read, lookup, compare, and classify are low-risk. They can be enabled early and used broadly.
+### Per-database — `Exclude from Chat & MCP`
 
-### Normative production-write policy
+The `Exclude from Chat & MCP` flag on the database properties panel blocks the entire database from MCP access. Encrypted and revision-proof databases are excluded by default. Same enforcement shape as per-record — DT MCP refuses.
 
-This section is normative.
+### Environment posture
 
-#### What counts as a production write
+There is no `PKIM_ALLOW_PRODUCTION_WRITES` env var. There is no PKIM-side gate. Writes fire the moment a skill calls a DT MCP write tool against a non-excluded record.
 
-A production write is any mutation against a non-scratch database or canonical library, including:
+That means:
 
-- move
-- replicate
-- rename
-- delete
-- retag
-- metadata write
-- canonical note mutation
-- mirror export that overwrites an intentionally committed canonical snapshot
+- Skills use dry-run patterns internally — read first, propose, act. Not "propose then flip a global write gate".
+- The `PKIM-Pilot` database is the scratch surface. Every skill that needs to test a write path does so there.
+- Operator confirmation lives *inside* the workflow, not around it. A skill that's about to author a KN reads back the merge-vs-create judgement before creating.
 
-#### Always forbidden by default
+## Review state model
 
-The following operations are forbidden by default:
+The review-state vocabulary is closed. Adding a state requires updating this document + [02 Information Model](02-information-model.md) + the audit.
 
-- delete
-- auto-move of indexed records
-- any write against non-scratch databases when the write gate is closed
-- any mutation path that does not support dry-run
-- any mutation path that does not emit before-state and after-state logging
-- any mutation path that cannot re-read and verify the intended change
+| State | Meaning |
+|---|---|
+| `inbox` | Arrived. No useful operator meaning yet. |
+| `profiled` | Class and baseline metadata set. |
+| `needs-human` | Automation deliberately paused. Requires human decision. |
+| `approved` | Safe for the next bounded automation step. |
+| `blocked` | Stuck. Cannot proceed without intervention. |
+| `filed` | In long-term filing destination. |
+| `mirrored` | KN-only. Mirror export completed and verified. |
+| `archived` | Intentionally inactive. |
+| `error` | Automation left inconsistent state. Interrupt. |
 
-#### Write unlock
+### The `needs-human` gate
 
-No production write may execute unless `PKIM_ALLOW_PRODUCTION_WRITES=true`.
+`needs-human` is the deliberate human-in-the-loop mechanism. Records flip to `needs-human` from any state when:
 
-That flag enables eligibility for approved write paths. It does not waive approval, dry-run, logging, or verification requirements.
+- The intake skill can't confidently classify a record.
+- The audit finds a contradiction requiring a human choice.
+- The audit finds a zombie claim on a `published` KN.
+- A merge-vs-create judgement is ambiguous.
+- Any skill hits a decision it deliberately doesn't make.
 
-#### Required dry-run behaviour
+**Automation must not progress a `needs-human` record's state.** Automated workflows skip these records — they remain visible in the `Needs Human Review` smart group but are excluded from processing. Clearing the flag is human-only: the reviewer either revises the record and sets the next normal state, or retires it.
 
-Every state-changing command must support dry-run mode.
+### The `error` state
 
-Dry-run output must show:
+`error` is an interrupt. It can be set from any state when automation fails. It doesn't imply a fixed recovery path — the specific error determines what is done next. A common pattern:
 
-- target database
-- target record IDs
-- intended action
-- policy result
-- expected field changes or location changes
+1. A skill's write returns unexpected data.
+2. The skill sets `review_state=error`, `automation_last_run_state=error`, and stops for this record.
+3. The `Automation Error` smart group surfaces it.
+4. The operator investigates. Recovery either re-runs the skill (having fixed the underlying issue) or hand-corrects and resets `review_state`.
 
-#### Required post-mutation verification
+### Transitions
 
-After every mutation, the runtime must:
+Allowed transitions:
 
-- re-read the mutated record or records
-- compare refreshed state to intended state
-- log before state
-- log intended mutation
-- log refreshed after state
-- fail closed if refreshed state does not match the intended bounded change
+```
+inbox → profiled → {needs-human | approved | error}
+needs-human → {approved | blocked | archived}    (human-driven)
+approved → filed                                   (agent or human)
+approved → mirrored                                 (agent, KN-only)
+blocked → profiled                                  (human)
+filed → archived                                    (retention decision)
+mirrored → approved                                 (canonical note changed)
+any → error                                          (automation failure)
+error → profiled                                     (human)
+```
 
-### Approval-gated writes
+Any other transition is invalid. The audit flags illegal transitions when it walks records.
 
-The following require explicit approval and logging:
+## Supersession
 
-- metadata mutation
-- note creation that affects canonical records
-- move, replicate, rename, or delete
-- export actions that overwrite committed mirrors
+Supersession is how the corpus retires stale material without losing the trail.
 
-### Scratch before production
+### The pattern
 
-Any new command or adapter must pass on a scratch database before it touches production libraries.
+1. A newer record renders an older one obsolete. Both continue to exist in the database — supersession does not delete.
+2. Author an RL of `Relation_Type: supersedes` from the newer record to the older.
+3. Update the older record's status:
+   - EV: `evidencestatus=superseded`.
+   - KN: `knowledgestatus=archived`, `review_state=archived`.
+   - CL: `review_state=archived`.
+4. The audit's zombie-claim walk uses `evidencestatus=superseded` as a signal — claims citing only superseded EVs get flagged.
 
-## Recovery Requirements
+### Propagation
 
-- Use conventional backups for DEVONthink database packages.
-- Use DEVONthink versions and named versions for in-app note history.
-- Use export mirrors for text-level portability and recovery.
-- Keep run logs so bad automation can be traced, not guessed at.
+When an EV is superseded, every KN citing it may now carry a stale claim. Two responses:
 
-### Backup and restore drills
+- **Immediate**: run Workflow 7 (Periodic Claim Audit) against the affected KNs. The zombie check surfaces claims that need attention.
+- **Passive**: leave it until the next scheduled audit. Fine if the supersession isn't urgent.
 
-Minimum required layers:
+### When to retire vs supersede
 
-- system backup
-- database archives
-- mirror backup
-- periodic restore testing
+- **Retire (`review_state=archived`, no successor)**: the record is genuinely obsolete and nothing replaces it. Rare.
+- **Supersede (`supersedes` RL to successor)**: the record's role is now filled by a newer one. Most retirements are supersessions.
 
-Restore tests must be run on a cadence, not just declared in a checklist.
+The distinction matters for the audit. A retired-with-no-successor record makes any citing KN a zombie candidate; a superseded-with-successor record lets the operator re-point the citation.
 
-## Indexed Material Rules
+## Tagging discipline
 
-- Index parent roots, not one-off files.
-- Expect manual refresh requirements after external filesystem activity.
-- Treat indexed cloud material as operationally fragile.
-- Keep mobile-critical content imported.
+Every touched record ends up tagged before the skill returns success. Two mandatory layers — structural (closed vocabulary per class) and topical (open vocabulary, shared corpus-wide). Full axes in [03 Record And Note Specification](03-record-and-note-specification.md).
 
-## Minimum Observability
+Untagged records are invisible to DEVONthink's navigation surface. This is not stylistic — it's a functional failure mode.
 
-At minimum, keep:
+## Named versions
 
-- run ID
-- actor or tool name
-- target database
-- action type
-- before state summary
-- intended mutation
-- refreshed after state summary
-- error output or rollback action
+Knowledge notes use DEVONthink's own revision model as the first layer of history. Named versions are appropriate for:
 
-## Release Gates
+- Significant synthesis revisions.
+- Important relation-note changes.
+- Publishing / sharing milestones.
+- Automation-generated updates that change substantive content.
 
-- compatibility matrix must be current
-- capability probe must pass before agent runs
-- scratch-database validation must pass before live write enablement
+Named versions are created **before** the change, not after — that gives a clean rollback point. Skills that mutate substantive content on `KnowledgeStatus ∈ {reviewed, published}` records must create a named version first.
 
-See:
+## Rollback and recovery
 
-- [docs/ops/compatibility-matrix.md](../ops/compatibility-matrix.md)
-- [docs/ops/capability-probe.md](../ops/capability-probe.md)
+### The rollback contract
 
-## Best-Than-Best-Practice Defaults
+- DEVONthink Trash is the first stop for accidental deletion. Records in Trash are recoverable via the DEVONthink UI or `mcp__devonthink__lookup_records include_trashed: true`.
+- Named versions on KN records allow reverting body content.
+- Custom metadata writes are inherently reversible — DT MCP's `set_record_custom_metadata mode="merge"` doesn't destroy untouched fields. A wrong value is corrected by writing the right one.
+- File-as-truth on indexed KN records: the on-disk `.md` is coherent with the DEVONthink record. If the record is trashed, the file is trashed. If the file is trashed outside DEVONthink, the record shows a missing-file state and DEVONthink's `Update Indexed Items` reconciles.
 
-- Separate production and scratch configuration.
-- Record exact tool and schema versions in docs before enabling writes.
-- Keep policy checks in code and documentation, not only prompts.
-- Prefer replicate over move early.
-- Treat delete as a later-stage administrative function, not an everyday automation action.
+### Recovery patterns
 
-## Detailed Companions
+- **Accidental delete** → recover from DEVONthink Trash. Set `review_state` back to a sensible state.
+- **Wrong metadata write** → the `set_record_custom_metadata` verify-read shows the actual state; correct with another `mode="merge"` call.
+- **Corrupted body** → revert to the named version created before the change.
+- **Skill left inconsistent state** → the skill sets `review_state=error` and surfaces. The operator investigates before any re-run.
 
-- For repo artifact locations, use [12 Project Hygiene And Work Surface](12-project-hygiene-and-work-surface.md).
-- For concrete runtime commands and runbooks, use [11 Agent Skills And Runbooks](11-agent-skills-and-runbooks.md).
-- For automation component design, use [09 Automation Architecture](09-automation-architecture.md).
+## Safety anti-patterns
+
+- Bypassing DEVONthink's `Exclude from AI` / `Exclude from Chat & MCP` gates by any mechanism.
+- `set_record_custom_metadata mode="replace"` when merge is intended — replace drops every field not in the payload.
+- Automation acting on `needs-human` records.
+- Delete without going through Trash first.
+- Mutating a `KnowledgeStatus=published` KN's body without creating a named version.
+- Auto-advancing state on a record after an `error`.
