@@ -1,5 +1,9 @@
 # CLI-First Atomic Primitives
 
+> **Superseded 2026-07-15 by [24 DT MCP Adoption](24-dt-mcp-adoption.md).**
+>
+> DEVONthink 4.3 Herschel shipped an in-app MCP server that covers every capability this brief argued a Swift CLI would provide, usually better (per-key metadata merge, indexed-file writes, batch mode, PII redaction, per-record AI exclusion). The `pkim-binary` runtime retires; skills compose DT MCP tools directly. This doc is retained for the historical reasoning trail.
+
 ## Purpose
 
 Define the architectural pivot from a Python+PyObjC MCP server with compound tools to a single compiled CLI (`pkim`) exposing atomic primitives, with policy and orchestration owned by skills.

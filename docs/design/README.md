@@ -11,7 +11,7 @@ Use it to choose the smallest design contract needed for the current task. Do no
 - DEVONthink is the canonical control plane and system of record.
 - Evidence and knowledge are separate object classes with different storage and automation rules.
 - Native DEVONthink Markdown notes are canonical for knowledge; filesystem Markdown mirrors are exported for Git, tooling, and portability.
-- The runtime is a single compiled CLI (`pkim`) exposing atomic primitives; skills own policy and orchestration. See doc 22. (Earlier runtime stances — community MCP adapter, owned Python MCP server, PyObjC bridge — are recorded in docs 09, 10, 20 for context and superseded.)
+- The runtime is DEVONthink 4.3+'s in-app MCP server; skills compose its tools directly. See doc 24. (Earlier runtime stances — community MCP adapter, owned Python MCP server, PyObjC bridge, and a Swift CLI (`pkim`) — are recorded in docs 09, 10, 20, 22, and 23 for context and superseded.)
 - Build work proceeds continuously, but capability is measured by MVP checkpoints rather than a staged rollout.
 - The repo is a working knowledge operating-system surface: design, skills, scripts, prompts, schemas, tests, run evidence, and mirrors are coordinated here rather than treated as separate projects.
 
@@ -38,7 +38,7 @@ Do not load the whole design pack by default. Use the smallest set that answers 
 | Workflow behaviour | `05-workflows.md`, then relevant skill docs |
 | DEVONthink structure | `07-devonthink-operating-model.md` |
 | Safety and write policy | `06-operations-and-safety.md` |
-| Automation runtime | `22-cli-first-atomic-primitives.md`, then `23-swift-pkim-binary.md` (forthcoming) |
+| Automation runtime | `24-dt-mcp-adoption.md` (canonical); docs 22 and 23 are superseded but retained for reasoning history |
 | Repo structure | `12-project-hygiene-and-work-surface.md` |
 
 ## Authority Model
@@ -118,8 +118,9 @@ The second brief is the dominant design direction. The first brief still contrib
 | [19 Synthesis Uplift Plan](19-synthesis-uplift-plan.md) | Project plan to close the synthesis gap with claim schema, contradiction handling, and confidence | Synthesis is a first-class discipline, not an emergent property of filing | User direction |
 | [19a Metadata Is Not The Graph](19a-metadata-is-not-the-graph.md) | One-page rationale for the metadata-vs-graph principle | Graph edges live in note bodies as WikiLinks; metadata describes records | User direction |
 | [20 Bridge And MCP Architecture](20-bridge-and-mcp-architecture.md) | Layered architecture for PyObjC ScriptingBridge transport and the new `dt-pkim-mcp` server | **Superseded 2026-05-20** by doc 22 | User direction |
-| [22 CLI-First Atomic Primitives](22-cli-first-atomic-primitives.md) | Architectural pivot: single compiled CLI exposing atomic primitives; skills own policy and orchestration | Canonical for the runtime; supersedes docs 09, 10, 20 | User direction |
-| [23 Swift `pkim` Binary](23-swift-pkim-binary.md) | Contract for the compiled CLI: verb surface, JSON envelope, project layout, Xcode setup, write-gate enforcement | Canonical for the binary's behaviour; built against by the implementation workstream | User direction |
+| [22 CLI-First Atomic Primitives](22-cli-first-atomic-primitives.md) | Architectural pivot: single compiled CLI exposing atomic primitives; skills own policy and orchestration | **Superseded 2026-07-15** by doc 24 | User direction |
+| [23 Swift `pkim` Binary](23-swift-pkim-binary.md) | Contract for the compiled CLI: verb surface, JSON envelope, project layout, Xcode setup, write-gate enforcement | **Superseded 2026-07-15** by doc 24 | User direction |
+| [24 DT MCP Adoption](24-dt-mcp-adoption.md) | DEVONthink 4.3+ in-app MCP server is the runtime; skills compose its tools directly. Retires `pkim-binary`. | Canonical for the runtime; supersedes docs 09, 10, 20, 22, 23 | User direction |
 
 ## Build Threads
 

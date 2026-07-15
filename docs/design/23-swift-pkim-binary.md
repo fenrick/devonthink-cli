@@ -1,5 +1,9 @@
 # Swift `pkim` Binary
 
+> **Superseded 2026-07-15 by [24 DT MCP Adoption](24-dt-mcp-adoption.md).**
+>
+> The Swift `pkim` binary this brief specified retires. DEVONthink 4.3 Herschel's own MCP server covers the same 25-verb surface and adds capabilities (batch mode, patch-mode content updates, AI exclusion, PII redaction, bibliographic enrichment) the binary would never have grown on its own. This doc is retained for the historical reasoning trail.
+
 ## Purpose
 
 The contract for the compiled CLI introduced by [22 CLI-First Atomic Primitives](22-cli-first-atomic-primitives.md). This document is canonical for the binary's command surface, JSON envelope, project layout, and runtime behaviour. It is the artefact the Xcode implementation workstream is built against.
