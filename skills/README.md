@@ -1,110 +1,47 @@
 # PKIM Skills
 
-> **Runtime note (2026-07-15).** Skills compose DEVONthink 4.3+'s in-app MCP server tools directly. Any reference below (or in individual `SKILL.md` files) to `pkim <verb>`, `DTWriter.*`, `DTReader.*`, or `pkim.bridge.*` is historical — see [../docs/design/24-dt-mcp-adoption.md](../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. Skill *bodies* (their purpose, judgement, tag rules, stop conditions) remain valid; only the tool names shift.
+> **Runtime.** DEVONthink 4.3+'s in-app MCP server. See [../docs/design/24-dt-mcp-adoption.md](../docs/design/24-dt-mcp-adoption.md).
 
-## Cross-cutting rule: RL records are part of every end-to-end walk
+Three skills. Each is a named tool the LLM invokes explicitly — using named skills prevents the LLM from inventing its own version of a workflow. If you catch yourself composing ad-hoc DT MCP tool sequences that overlap one of these skills, invoke the skill instead.
 
-A Workflow-3 walk that produces a KN + N CLs but zero RLs is **incomplete**. Cross-citations in CL reasoning prose must be expressed as first-class `RL-…` records — the mirror graph, contradiction detection, and supersession propagation all run over RLs, not over prose hints. See [_shared/tagging-discipline.md](_shared/tagging-discipline.md) for RL-class tag axes. Skills that drive the walk include this rule explicitly: `dt-profile-record`, `dt-build-knowledge-note`, `dt-build-claim-ledger`, `dt-inspect-graph-neighbourhood`.
+## The three
 
-## Cross-cutting rule: indexed-database creates go through import, not create
+### [`pkim-orient-and-setup`](pkim-orient-and-setup/SKILL.md)
 
-For PKIM-Knowledge (and any other database with a configured indexed root), record creation must first write the `.md` file to the indexed root on the filesystem, then use `mcp__devonthink__import_file` with `mode: "index"` to bring it in. DT MCP's `create_record` produces *imported* records inside the database package; that silently defeats indexed-mode for a database that expects file-as-truth.
+**Read at the start of every session.** Establishes the shared vocabulary (record classes, tag axes, metadata schema, filing rules, cross-database WikiLink constraint) and installs the canonical PKIM configuration in DEVONthink if any of it is missing.
 
-## Cross-cutting rule: every record must be tagged
+Every other skill assumes this one has been read. It's the base layer — don't duplicate its content in the other skills.
 
-Every PKIM record (EV, KN, CL, RL) **must** end up with a complete slash-namespaced tag set applied via `mcp__devonthink__set_record_tags` before any skill that touched it returns success. This is non-negotiable. See [_shared/tagging-discipline.md](_shared/tagging-discipline.md) for the per-class axes table, inheritance rules, and structural / topical layer split. The skills that mint or transition records explicitly reference this rule:
-`dt-apply-approved-metadata`, `dt-profile-record`, `dt-safe-file`, `dt-build-knowledge-note`, `dt-build-relation-note`, `dt-build-claim-ledger`, `dt-sweep-inbox`, `dt-resolve-canonical-note`.
+### [`dt-intake`](dt-intake/SKILL.md)
 
-## Purpose
+**The inbox → filed record walk.** Sweeps a database's `/Inbox`, dispatches one Sonnet subagent per record for profile + enrichment + optional KN/RL authoring + filing, aggregates results.
 
-Skills define the operating methods for the PKIM knowledge operating system.
+Use when: processing captures, triaging the inbox, "did you move the source files out of `/Inbox`".
 
-A skill is not just a prompt. It is a bounded runbook for agent behaviour: when to use it, what to inspect, which command surface to call, what outputs to produce, and what not to do.
+### [`dt-audit`](dt-audit/SKILL.md)
 
-Taken together, the project skills form one larger operating skill:
+**Graph-health check.** Broken RL endpoints, dangling WikiLinks, zombie claims (retired evidence still cited), corpus-level contradictions, orphan records, discipline violations.
 
-> maintain a DEVONthink-centred knowledge corpus by turning incoming material into profiled evidence, linked knowledge notes, explicit relations, deliberate filing, and auditable run evidence.
+Use weekly, or before scaling ingest, or after a retirement/supersession wave. Not for operational reports (queue depth, metadata coverage) — those aren't part of PKIM's discipline surface.
 
-Each individual skill is a safe slice of that larger skill.
+## Cross-cutting rules
 
-## Skill Shape
+The rules that every skill honours. Each is documented once (in the location noted); do not duplicate.
 
-Every skill should disclose information in this order:
+- **Every touched record must be tagged.** Structural + topical axes. See [`pkim-orient-and-setup/references/tag-axes.md`](pkim-orient-and-setup/references/tag-axes.md).
+- **RLs are first-class edges, not prose.** Every semantically load-bearing connection between records is an RL, not a `[[…]]` in a bullet list. See [`dt-intake/references/rl-authoring.md`](dt-intake/references/rl-authoring.md).
+- **Cross-database references use item links, not WikiLinks.** See [`pkim-orient-and-setup/references/wikilink-and-item-link.md`](pkim-orient-and-setup/references/wikilink-and-item-link.md).
+- **`set_record_custom_metadata` always with `mode="merge"`.** `replace` drops every field not in the payload — footgun.
+- **File only after enriching.** A record leaves `/Inbox` only when metadata + tags + destination are settled.
 
-1. **Why** — the failure mode it prevents or the value it creates.
-2. **When** — the trigger conditions.
-3. **What** — the state it owns or changes.
-4. **How** — the workflow and command surface.
-5. **Evidence** — the artifact, note, metadata, or queue state proving the work happened.
-6. **Stop rules** — what not to do and when to escalate.
+## Assets and references
 
-If a skill lacks the why, it becomes a command wrapper. That is not enough for this system.
+Each skill's `references/` holds progressive-disclosure detail — the SKILL.md is the entry doc, the references answer specific mid-workflow questions. `assets/` holds files the skill installs into DEVONthink (canonical templates, config).
 
-## Boundary
+Don't front-load references. Read them on demand.
 
-| Thing | Role |
-| --- | --- |
-| Skill | Method, judgement, sequencing, safety rules |
-| Script or `pkim` command | Deterministic execution and artifact generation |
-| DEVONthink | Canonical record and note state |
-| Run artifact | Evidence of what happened |
+## Why so few skills
 
-The LLM uses the skill to decide what should happen. The command surface makes the bounded action repeatable.
+An earlier version of this directory had 26 skills built to sequence pkim-verb calls. That layer is retired (see [../docs/design/24-dt-mcp-adoption.md](../docs/design/24-dt-mcp-adoption.md)). DEVONthink 4.3+'s MCP server is rich enough that most of what those skills orchestrated is now a single MCP tool call. What remains are the three workflows that carry real policy: orientation + setup, per-record intake with subagent fan-out, and graph audit.
 
-## Workflow Groups
-
-### Readiness And Health
-
-- `dt-health-check`
-- `dt-check-scale-readiness`
-- `dt-run-restore-drill`
-- `dt-review-queue-health`
-- `dt-review-metadata-overview`
-
-### Intake And Metadata
-
-- `dt-sweep-inbox`
-- `dt-profile-record`
-- `dt-apply-approved-metadata`
-- `dt-safe-file`
-- `dt-ensure-group-path`
-- `dt-recover-failed-write`
-
-### Knowledge And Graph
-
-- `dt-resolve-canonical-note`
-- `dt-build-knowledge-note`
-- `dt-build-relation-note`
-- `dt-identify-knowledge-gaps`
-- `dt-inspect-graph-neighbourhood`
-- `dt-reconcile-relation-edge`
-- `dt-audit-graph-corpus`
-- `dt-execute-repair-plan`
-
-### Portability
-
-- `dt-sync-export-mirror`
-
-## Operating Order
-
-Typical session order:
-
-1. `dt-health-check`
-2. `dt-review-queue-health`
-3. `dt-sweep-inbox`
-4. `dt-profile-record`
-5. `dt-apply-approved-metadata`
-6. `dt-build-knowledge-note` and `dt-build-relation-note`
-7. `dt-audit-graph-corpus`
-8. `dt-safe-file`
-9. `dt-sync-export-mirror`
-
-Detailed cadence: [../docs/ops/operating-rhythm.md](../docs/ops/operating-rhythm.md).
-
-## Rules
-
-- Do not bypass a skill just because a command exists.
-- Do not treat script output as sufficient judgement.
-- Do not live-write without the write gate and the relevant safety checks.
-- Do not move records before profiling, enrichment, note work, and graph wiring are complete.
-- Do not create relation notes without a defensible rationale.
+The one-skill-one-decision structure is deliberate. If a proposed skill would just wrap a single DT MCP tool with a rename, it's redundant. If it would just describe the model — that's [`pkim-orient-and-setup`](pkim-orient-and-setup/SKILL.md)'s job.

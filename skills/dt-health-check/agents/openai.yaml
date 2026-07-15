@@ -1,4 +1,0 @@
-interface:
-  display_name: "Health Check"
-  short_description: "Operational PKIM skill: dt-health-check"
-  default_prompt: "Use dt-health-check for the task, follow the SKILL.md workflow, and produce the documented output contract."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Inspect Graph Neighbourhood"
-  short_description: "Operational PKIM skill: dt-inspect-graph-neighbourhood"
-  default_prompt: "Use dt-inspect-graph-neighbourhood for the task, follow the SKILL.md workflow, and produce the documented output contract."

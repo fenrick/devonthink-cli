@@ -1,4 +1,0 @@
-interface:
-  display_name: "Recover Failed Write"
-  short_description: "Operational PKIM skill: dt-recover-failed-write"
-  default_prompt: "Use dt-recover-failed-write for the task, follow the SKILL.md workflow, and produce the documented output contract."

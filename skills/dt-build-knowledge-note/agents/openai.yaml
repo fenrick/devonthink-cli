@@ -1,4 +1,0 @@
-interface:
-  display_name: "Build Knowledge Note"
-  short_description: "Operational PKIM skill: dt-build-knowledge-note"
-  default_prompt: "Use dt-build-knowledge-note for the task, follow the SKILL.md workflow, and produce the documented output contract."

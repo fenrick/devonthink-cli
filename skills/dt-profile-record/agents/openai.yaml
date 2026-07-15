@@ -1,4 +1,0 @@
-interface:
-  display_name: "Profile Record"
-  short_description: "Operational PKIM skill: dt-profile-record"
-  default_prompt: "Use dt-profile-record for the task, follow the SKILL.md workflow, and produce the documented output contract."

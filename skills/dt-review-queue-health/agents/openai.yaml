@@ -1,4 +1,0 @@
-interface:
-  display_name: "Review Queue Health"
-  short_description: "Interpret PKIM queue metrics and surface the real operational blockers"
-  default_prompt: "Review the current PKIM queue health, identify the highest-priority blockers, and tell me what matters now."

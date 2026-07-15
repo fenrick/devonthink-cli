@@ -1,4 +1,0 @@
-interface:
-  display_name: "Reconcile Relation Edge"
-  short_description: "Operational PKIM skill: dt-reconcile-relation-edge"
-  default_prompt: "Use dt-reconcile-relation-edge for the task, follow the SKILL.md workflow, and produce the documented output contract."

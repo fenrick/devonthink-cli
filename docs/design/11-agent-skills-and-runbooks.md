@@ -1,6 +1,10 @@
 # Agent Skills And Runbooks
 
-> **PARTIALLY REVISED 2026-05-20** — the *principle* recorded here (skills own policy and judgement; commands own bounded mechanics) is preserved and strengthened by [22 CLI-First Atomic Primitives](22-cli-first-atomic-primitives.md). The *mechanism* changes: skills now compose atomic CLI verbs rather than compound `pkim` subcommands or MCP tools. The skills index below is being rewritten under task 5 of the CLI-first pivot to reflect the new primitive surface; until then, treat skill bodies under `skills/*/SKILL.md` as authoritative for what each skill *should achieve*, and doc 22 as authoritative for *how* the verbs called from skills are shaped.
+> **Superseded 2026-07-15 by [24 DT MCP Adoption](24-dt-mcp-adoption.md).**
+>
+> The 20+ skills this brief mapped retired with the pkim-verb layer. The new skill set is three: `pkim-orient-and-setup`, `dt-intake`, `dt-audit`. See [`skills/README.md`](../../skills/README.md) for the current index. The *principle* recorded here (skills own judgement; the mechanism layer owns bounded mechanics) is preserved — the mechanism layer is now DEVONthink's in-app MCP server, not a PKIM-owned CLI.
+>
+> The rest of this doc is retained for reasoning history — it explains why the skill-command split exists at all. That reasoning applies unchanged to the new skill set.
 
 ## Purpose
 

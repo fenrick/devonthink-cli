@@ -1,4 +1,0 @@
-interface:
-  display_name: "Sync Export Mirror"
-  short_description: "Operational PKIM skill: dt-sync-export-mirror"
-  default_prompt: "Use dt-sync-export-mirror for the task, follow the SKILL.md workflow, and produce the documented output contract."

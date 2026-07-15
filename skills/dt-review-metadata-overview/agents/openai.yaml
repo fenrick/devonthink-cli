@@ -1,4 +1,0 @@
-interface:
-  display_name: "Review Metadata Overview"
-  short_description: "Operational PKIM skill: dt-review-metadata-overview"
-  default_prompt: "Use dt-review-metadata-overview for the task, follow the SKILL.md workflow, and produce the documented output contract."

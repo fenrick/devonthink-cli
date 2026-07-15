@@ -1,4 +1,0 @@
-interface:
-  display_name: "Apply Approved Metadata"
-  short_description: "Operational PKIM skill: dt-apply-approved-metadata"
-  default_prompt: "Use dt-apply-approved-metadata for the task, follow the SKILL.md workflow, and produce the documented output contract."
