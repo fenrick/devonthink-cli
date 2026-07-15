@@ -1,8 +1,10 @@
 ---
 name: dt-ensure-group-path
 description: Create a missing DEVONthink group path under the approved PKIM taxonomy with dry-run planning, allowlist checks, and post-create verification. Make sure to use this skill whenever a proposed filing destination does not exist yet, a filing action fails because the destination group is missing, or dt-safe-file hands off to this skill to create the path before proceeding.
-compatibility: Works in any runtime that can resolve a DEVONthink database, validate a proposed path against the PKIM taxonomy, and call the shared `scripts/pkim ensure-group-path` command surface.
+compatibility: Works in any runtime that can resolve a DEVONthink database, validate a proposed path against the PKIM taxonomy, and call the shared `pkim ensure-group-path` command surface.
 ---
+
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
 
 # dt-ensure-group-path
 
@@ -37,7 +39,7 @@ Follow this sequence.
 
 1. Identify the target database and the full proposed group path.
 2. Validate that the path sits under an approved taxonomy root for that database type.
-3. Run `scripts/pkim ensure-group-path --database <db> --path <path> --format json` (dry-run by default).
+3. Run `pkim ensure-group-path --database <db> --path <path> --format json` (dry-run by default).
 4. Read the returned blocking conditions and intended action.
 5. If the path is blocked, stop and explain the blocking condition plainly.
 6. If the path is allowed and the user wants it created, confirm before proceeding.
@@ -142,7 +144,7 @@ Canonical shape for a live result:
 Dry-run:
 
 ```bash
-scripts/pkim ensure-group-path \
+pkim ensure-group-path \
   --database "PKIM-Evidence-Work" \
   --path "/Sources/Imported/PKIM/Topic" \
   --format json
@@ -151,7 +153,7 @@ scripts/pkim ensure-group-path \
 Live:
 
 ```bash
-scripts/pkim ensure-group-path \
+pkim ensure-group-path \
   --database "PKIM-Evidence-Work" \
   --path "/Sources/Imported/PKIM/Topic" \
   --live \

@@ -1,8 +1,10 @@
 ---
 name: dt-review-queue-health
 description: Inspect PKIM queue metrics and determine whether the queue surface reflects healthy operational flow, backlog, or hidden failure. Make sure to use this skill whenever the user asks what is piling up, whether queues are healthy, why automation feels stuck, or what the highest-priority operational cleanup is.
-compatibility: Works in any runtime that can call the shared `scripts/pkim queue-metrics` command and inspect the returned queue counts.
+compatibility: Works in any runtime that can call the shared `pkim queue-metrics` command and inspect the returned queue counts.
 ---
+
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
 
 # dt-review-queue-health
 
@@ -33,7 +35,7 @@ Queue review is how you turn counts into action.
 
 1. Run:
    ```bash
-   scripts/pkim queue-metrics --format json
+   pkim queue-metrics --format json
    ```
 2. Read totals and per-database group counts.
 3. Separate:
@@ -80,5 +82,5 @@ Produce a short queue-health review with:
 ## Preferred tool path
 
 ```bash
-scripts/pkim queue-metrics --format json
+pkim queue-metrics --format json
 ```

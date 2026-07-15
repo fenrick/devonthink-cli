@@ -1,8 +1,10 @@
 ---
 name: dt-review-metadata-overview
 description: Review one or more PKIM metadata-overview reports to determine coverage quality, identify the highest-value metadata gaps, and decide whether dashboard output is operationally useful or misleading. Make sure to use this skill whenever the user asks about metadata coverage, dashboard quality, missing field patterns, or what to fix next in the corpus metadata layer.
-compatibility: Works in any runtime that can call the shared `scripts/pkim metadata-overview` command and read the emitted JSON/dashboard note content.
+compatibility: Works in any runtime that can call the shared `pkim metadata-overview` command and read the emitted JSON/dashboard note content.
 ---
+
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
 
 # dt-review-metadata-overview
 
@@ -34,7 +36,7 @@ Without that, dashboards become decorative honesty.
 
 1. Generate or read the relevant report:
    ```bash
-   scripts/pkim metadata-overview --database PKIM-Pilot --doc-role evidence --format json
+   pkim metadata-overview --database PKIM-Pilot --doc-role evidence --format json
    ```
 2. Check the slice definition first:
    - database
@@ -83,5 +85,5 @@ Produce a short review with:
 ## Preferred tool path
 
 ```bash
-scripts/pkim metadata-overview --database PKIM-Pilot --doc-role evidence --format json
+pkim metadata-overview --database PKIM-Pilot --doc-role evidence --format json
 ```

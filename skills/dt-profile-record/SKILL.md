@@ -1,8 +1,10 @@
 ---
 name: dt-profile-record
 description: Read one DEVONthink record and produce a read-only PKIM profile packet with a deterministic concept set, candidate graph, and staged graph-build scaffolding. Make sure to use this skill whenever the user asks to profile, analyse, classify, triage, or draft graph-ready note scaffolding for a DEVONthink record.
-compatibility: Works in any runtime that can read a DEVONthink record and optionally access compare/classify signals. The local `scripts/pkim profile` command is the preferred deterministic tool path when available.
+compatibility: Works in any runtime that can read a DEVONthink record and optionally access compare/classify signals. The local `pkim profile` command is the preferred deterministic tool path when available.
 ---
+
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
 
 # dt-profile-record
 
@@ -44,10 +46,10 @@ Anything else (`medium`, `overlapping`, `embedded`, `edge-support`, `local-detai
 
 ## Workflow
 
-1. Resolve the source record and read the command packet from `scripts/pkim profile --record "<ref>" --format json`.
+1. Resolve the source record and read the command packet from `pkim profile --record "<ref>" --format json`.
    - **For records that already exist in the corpus** (you want the dependency picture, not the discovery work): run `pkim deep-profile --record "<ref>" --format json` instead. It composes the bridge metadata, parsed `## Claims` block, mirror dependency graph (inbound + outbound citations with edge class + source section), audit-discipline findings against the record, and field-classification status. Use the discovery profile when the record is unprofiled; use deep-profile when you want to understand how the record sits in the existing graph.
 2. Read the source content, metadata, compare neighbours, and candidate concept set.
-   - **For long documents** (more than ~5000 words, 10 pages, or any PDF/book-length source): the profile command reads only a shallow excerpt. Use `scripts/pkim extract-text --record "<ref>" --format json` to extract the full text, then read the introduction, section headings, and conclusion before forming the concept set. Do not rely on DEVONthink's summary or the first screen alone — dense books will appear to have one weak candidate when they contain nine strong ones.
+   - **For long documents** (more than ~5000 words, 10 pages, or any PDF/book-length source): the profile command reads only a shallow excerpt. Use `pkim extract-text --record "<ref>" --format json` to extract the full text, then read the introduction, section headings, and conclusion before forming the concept set. Do not rely on DEVONthink's summary or the first screen alone — dense books will appear to have one weak candidate when they contain nine strong ones.
 3. Review each `candidate_notes[]` entry:
    - confirm the concept is distinct, deferred, supporting, or edge-support
    - confirm its note-worthiness and dependency type
@@ -86,7 +88,7 @@ You are doing it badly when:
 
 ## MANDATORY: tag the record before returning success
 
-Every record this skill creates, transitions, or touches must end up with the canonical slash-namespaced tag set applied via `DTWriter.set_tags`. This is non-negotiable — see [_shared/tagging-discipline.md](../_shared/tagging-discipline.md) for the full per-class axes table and inheritance rules.
+Every record this skill creates, transitions, or touches must end up with the canonical slash-namespaced tag set applied via `mcp__devonthink__set_record_tags`. This is non-negotiable — see [_shared/tagging-discipline.md](../_shared/tagging-discipline.md) for the full per-class axes table and inheritance rules.
 
 Minimum check before this skill can declare success:
 - Structural tags for the record's class are set (`pkim/<class>`, plus the class-specific type/status/confidence axes).
@@ -137,7 +139,7 @@ Use the command packet's `candidate_notes[]`, `candidate_edges[]`, and `candidat
 ## Preferred tool path
 
 ```bash
-scripts/pkim profile --record "<ref>" --format json
+pkim profile --record "<ref>" --format json
 ```
 
 Read `prompts/profile-record.md` for the full command-level field contract.

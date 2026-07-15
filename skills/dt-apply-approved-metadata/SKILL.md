@@ -1,8 +1,10 @@
 ---
 name: dt-apply-approved-metadata
 description: Apply a bounded, approved metadata change to one DEVONthink record with dry-run validation and post-write verification. Make sure to use this skill whenever the user asks to write reviewed PKIM metadata back to DEVONthink, assign PKIM_ID after review, push approved review-state changes, or execute a reviewed metadata payload, even if they only say "write back the fields."
-compatibility: Works in any runtime that can read the target record, validate a small metadata payload, and perform an approved write path. The local `scripts/pkim apply-metadata` command is the preferred deterministic tool path when available.
+compatibility: Works in any runtime that can read the target record, validate a small metadata payload, and perform an approved write path. The local `pkim apply-metadata` command is the preferred deterministic tool path when available.
 ---
+
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
 
 # dt-apply-approved-metadata
 
@@ -157,7 +159,7 @@ You are doing it badly when:
 
 ## MANDATORY: tag the record before returning success
 
-Every record this skill creates, transitions, or touches must end up with the canonical slash-namespaced tag set applied via `DTWriter.set_tags`. This is non-negotiable — see [_shared/tagging-discipline.md](../_shared/tagging-discipline.md) for the full per-class axes table and inheritance rules.
+Every record this skill creates, transitions, or touches must end up with the canonical slash-namespaced tag set applied via `mcp__devonthink__set_record_tags`. This is non-negotiable — see [_shared/tagging-discipline.md](../_shared/tagging-discipline.md) for the full per-class axes table and inheritance rules.
 
 Minimum check before this skill can declare success:
 - Structural tags for the record's class are set (`pkim/<class>`, plus the class-specific type/status/confidence axes).
@@ -220,7 +222,7 @@ For live mode, `mode` becomes `"live"`, `after` contains the re-read state, and 
 When the local CLI is available, use:
 
 ```bash
-scripts/pkim apply-metadata \
+pkim apply-metadata \
   --record "<ref>" \
   --file runs/example/approved-metadata.json \
   --format json

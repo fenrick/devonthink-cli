@@ -1,8 +1,10 @@
 ---
 name: dt-check-scale-readiness
 description: Determine whether PKIM is operationally ready to scale beyond the pilot by validating reporting health, mirror drift, automation errors, and fresh restore-drill evidence. Make sure to use this skill whenever the user asks whether the system is ready to scale, whether the pilot exit conditions still hold, or whether a larger ingest batch is safe to start.
-compatibility: Works in any runtime that can read the shared run artifacts and call the local `scripts/pkim scale-readiness` command. The local CLI is the preferred deterministic path when available.
+compatibility: Works in any runtime that can read the shared run artifacts and call the local `pkim scale-readiness` command. The local CLI is the preferred deterministic path when available.
 ---
+
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
 
 # dt-check-scale-readiness
 
@@ -33,12 +35,12 @@ If those are not true, the next failure becomes harder to recover and harder to 
 
 1. Run the shared gate:
    ```bash
-   scripts/pkim scale-readiness --format json
+   pkim scale-readiness --format json
    ```
 2. Read each check result directly.
 3. If the user asked for a self-healing pass and restore evidence is stale or missing, rerun with:
    ```bash
-   scripts/pkim scale-readiness --refresh-restore-drill --format json
+   pkim scale-readiness --refresh-restore-drill --format json
    ```
 4. Separate:
    - hard blockers
@@ -81,11 +83,11 @@ Produce a structured readiness result with:
 ## Preferred tool path
 
 ```bash
-scripts/pkim scale-readiness --format json
+pkim scale-readiness --format json
 ```
 
 Optional self-healing path:
 
 ```bash
-scripts/pkim scale-readiness --refresh-restore-drill --format json
+pkim scale-readiness --refresh-restore-drill --format json
 ```

@@ -4,6 +4,8 @@ description: Inspect a failed or partial PKIM write operation, determine the act
 compatibility: Works in any runtime that can read run artifacts from the runs/ directory, profile the affected record in DEVONthink, and call dt-apply-approved-metadata for corrective writes. Requires access to the run directory that produced the failure.
 ---
 
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
+
 # dt-recover-failed-write
 
 This skill exists because live writes fail in ways that are not symmetric. A failure before the write is safe to retry. A failure after a partial write may have left the record in an inconsistent state that a naive retry would make worse. The difference between these cases is not visible from the error message alone — it requires reading the actual record state and comparing it against the run artifact.
@@ -99,7 +101,7 @@ Follow this sequence.
 1. Identify the failed run. Read `runs/<run-id>/run.json` and any `mutation.json` or `filing-proposal.json` in the same directory.
 2. Read the affected record's current state from DEVONthink:
    ```bash
-   scripts/pkim profile --record "<affected-ref>" --format json
+   pkim profile --record "<affected-ref>" --format json
    ```
 3. Compare the current state against:
    - `before` in the run artifact — to confirm whether the write was attempted
@@ -208,13 +210,13 @@ Valid `recovery_result` values: `recovered`, `escalated`, `false-alarm` (Type 3 
 Read the affected record's current state:
 
 ```bash
-scripts/pkim profile --record "<affected-ref>" --format json
+pkim profile --record "<affected-ref>" --format json
 ```
 
 Apply corrective write (dry-run first):
 
 ```bash
-scripts/pkim apply-metadata \
+pkim apply-metadata \
   --record "<affected-ref>" \
   --file runs/<run-id>/corrective-intent.json \
   --format json
@@ -223,7 +225,7 @@ scripts/pkim apply-metadata \
 Apply live after dry-run confirms:
 
 ```bash
-scripts/pkim apply-metadata \
+pkim apply-metadata \
   --record "<affected-ref>" \
   --file runs/<run-id>/corrective-intent.json \
   --live \

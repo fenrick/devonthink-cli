@@ -1,8 +1,10 @@
 ---
 name: dt-run-restore-drill
 description: Rebuild PKIM backup/restore evidence by copying a live DEVONthink database package, opening a restore-test copy, verifying a required group path, and recording deterministic evidence. Make sure to use this skill whenever backup evidence is missing, stale, or questioned, or when the user asks to prove that restore still works rather than just assuming it does.
-compatibility: Works in any runtime that can resolve a live DEVONthink database package and call the shared `scripts/pkim restore-drill` command. The local CLI is the preferred deterministic path when available.
+compatibility: Works in any runtime that can resolve a live DEVONthink database package and call the shared `pkim restore-drill` command. The local CLI is the preferred deterministic path when available.
 ---
+
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
 
 # dt-run-restore-drill
 
@@ -33,7 +35,7 @@ Anything less is just storage, not recovery.
 1. Choose the target database. Default to the scratch database unless the user asked for another one.
 2. Run:
    ```bash
-   scripts/pkim restore-drill --database PKIM-Pilot --format json
+   pkim restore-drill --database PKIM-Pilot --format json
    ```
 3. Inspect the evidence payload:
    - `source_path`
@@ -77,5 +79,5 @@ Produce deterministic evidence at:
 ## Preferred tool path
 
 ```bash
-scripts/pkim restore-drill --database PKIM-Pilot --format json
+pkim restore-drill --database PKIM-Pilot --format json
 ```

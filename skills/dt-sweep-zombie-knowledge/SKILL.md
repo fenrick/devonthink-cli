@@ -4,6 +4,8 @@ description: Find knowledge notes whose only cited evidence has been retired or 
 compatibility: Read-only against the export mirror's parsed graph (per WP2.1) with optional fall-back to live DEVONthink reads via the PyObjC ScriptingBridge transport. Writes only to runs/<run-id>/zombie-kns.json.
 ---
 
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
+
 # dt-sweep-zombie-knowledge
 
 This skill exists because retiring an evidence record does not, by itself,
@@ -30,7 +32,7 @@ Do not use it for:
 
 - contradictions between live KNs — use `dt-detect-contradictions`
 - per-claim grounding on a specific KN — use `dt-audit-claim-evidence`
-- structural-discipline checks — use `pkim audit-discipline`
+- structural-discipline checks — use the audit chain: `mcp__devonthink__search_records` + `get_record_text` + `get_record_properties`; findings emitted by the skill
 
 ## Inputs
 

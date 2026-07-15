@@ -1,8 +1,10 @@
 ---
 name: dt-sync-export-mirror
 description: Export approved canonical PKIM notes from DEVONthink into the filesystem mirror while preserving PKIM identity and provenance. Make sure to use this skill whenever the user asks to refresh the mirror, export approved notes to Markdown, inspect mirror drift, or sync the canonical note layer to the repo-facing export surface, even if they only say "refresh the mirror."
-compatibility: Works in any runtime that can read approved native notes and write within the configured export root. The local `scripts/pkim sync-mirror` command is the preferred deterministic tool path when available.
+compatibility: Works in any runtime that can read approved native notes and write within the configured export root. The local `pkim sync-mirror` command is the preferred deterministic tool path when available.
 ---
+
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
 
 # dt-sync-export-mirror
 
@@ -37,7 +39,7 @@ This is not a generic sync job. It is a policy-bound export.
 Since WP2.1 the mirror produces two parallel artefacts from the same source-of-truth:
 
 1. **Markdown export** (this skill) — portable YAML-frontmatter files for Git, external tooling, and disaster recovery. Lives under the configured export root.
-2. **SQLite graph** — the analytical surface used by `pkim audit-discipline`, `pkim deep-profile`, `pkim.mirror.audits`, `pkim.mirror.propagation`, and the `Claim_Backed` write-back loop. Built via `pkim.mirror.build_mirror_graph(reader, databases, db_path=...)`; rebuilt on every refresh, never authoritative for records (DT remains source of truth).
+2. **SQLite graph** — the analytical surface used by the audit chain: `mcp__devonthink__search_records` + `get_record_text` + `get_record_properties`; findings emitted by the skill, the DT MCP read tools + skill-side aggregation, `pkim.mirror.audits`, `pkim.mirror.propagation`, and the `Claim_Backed` write-back loop. Built via `pkim.mirror.build_mirror_graph(reader, databases, db_path=...)`; rebuilt on every refresh, never authoritative for records (DT remains source of truth).
 
 Both artefacts use the same `DTReader` walk and the same body parsing, so a Markdown export run and a graph-rebuild run see the same corpus state. The graph DB is intended to be regenerated cheaply, not retained as historical archive — for that, use the Markdown export.
 
@@ -198,7 +200,7 @@ A `result` of `"partial"` means at least one record failed. Report partial expor
 When the local CLI is available, use:
 
 ```bash
-scripts/pkim sync-mirror --scope changed --format json
+pkim sync-mirror --scope changed --format json
 ```
 
 Use `--scope all` for a full refresh. Add `--live` only when mirror-state writeback is also intentionally part of the run.

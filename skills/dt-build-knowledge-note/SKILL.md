@@ -1,8 +1,10 @@
 ---
 name: dt-build-knowledge-note
 description: "Turn one resolved candidate concept into one canonical PKIM knowledge-note mutation path: create, update, merge, or supersede. Make sure to use this skill whenever a candidate concept has already passed canonical resolution and now needs a bounded note write."
-compatibility: Works in any runtime that can read the source material and create or update a note through an approved write path. The local `scripts/pkim create-knowledge-note` and `scripts/pkim update-knowledge-note` commands are the preferred deterministic tool paths when available.
+compatibility: Works in any runtime that can read the source material and create or update a note through an approved write path. The local `pkim create-knowledge-note` and `pkim update-knowledge-note` commands are the preferred deterministic tool paths when available.
 ---
+
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
 
 # dt-build-knowledge-note
 
@@ -45,11 +47,11 @@ See [18 Evidence Discipline And Claims](../../docs/design/18-evidence-discipline
 4. Read the resolution decision for this candidate.
 5. Mint a PKIM_ID before touching DEVONthink:
    ```bash
-   scripts/pkim mint-id --type knowledge
+   pkim mint-id --type knowledge
    ```
 6. Build the note draft offline:
    ```bash
-   scripts/pkim build-knowledge-note \
+   pkim build-knowledge-note \
      --pkim-id <minted-id> \
      --title "<title>" \
      --note-type <type> \
@@ -62,7 +64,7 @@ See [18 Evidence Discipline And Claims](../../docs/design/18-evidence-discipline
    The draft is written to `workspace/drafts/`. All cross-references use `[[PKIM_ID]]` alias links — do not manually add `x-devonthink-item://` links to the body. The `## Related Notes` section is populated now, not backfilled later.
 7. Execute exactly one mutation path:
    - `create` → build draft offline, then push via `dt-push-batch`
-   - `update` → `scripts/pkim update-knowledge-note`
+   - `update` → `pkim update-knowledge-note`
    - `merge` → update the survivor note and retire the fragments
    - `supersede` → create successor offline, push batch, then archive predecessor per policy
 8. Record the candidate-to-note mapping back into the orchestration session.
@@ -81,7 +83,7 @@ See [18 Evidence Discipline And Claims](../../docs/design/18-evidence-discipline
 
 ## MANDATORY: tag the record before returning success
 
-Every record this skill creates, transitions, or touches must end up with the canonical slash-namespaced tag set applied via `DTWriter.set_tags`. This is non-negotiable — see [_shared/tagging-discipline.md](../_shared/tagging-discipline.md) for the full per-class axes table and inheritance rules.
+Every record this skill creates, transitions, or touches must end up with the canonical slash-namespaced tag set applied via `mcp__devonthink__set_record_tags`. This is non-negotiable — see [_shared/tagging-discipline.md](../_shared/tagging-discipline.md) for the full per-class axes table and inheritance rules.
 
 Minimum check before this skill can declare success:
 - Structural tags for the record's class are set (`pkim/<class>`, plus the class-specific type/status/confidence axes).
@@ -132,10 +134,10 @@ Produce one candidate-scoped mutation result that makes the note outcome explici
 
 ```bash
 # Step 1: mint ID
-scripts/pkim mint-id --type knowledge
+pkim mint-id --type knowledge
 
 # Step 2: build draft
-scripts/pkim build-knowledge-note \
+pkim build-knowledge-note \
   --pkim-id KN-YYYYMMDD-NNNN \
   --title "<title>" \
   --note-type <type> \
@@ -153,7 +155,7 @@ scripts/pkim build-knowledge-note \
 **Direct write (single note, no batch):**
 
 ```bash
-scripts/pkim create-knowledge-note \
+pkim create-knowledge-note \
   --source "<ref>" \
   --note-type <type> \
   --title "<title>" \
@@ -168,7 +170,7 @@ Then apply tags and alias via JXA (not done automatically for direct writes).
 **Update existing:**
 
 ```bash
-scripts/pkim update-knowledge-note --note "<existing-ref>" --summary "<summary>" --key-points "<points>" --add-evidence-link "Name|x-devonthink-item://..." --format json
+pkim update-knowledge-note --note "<existing-ref>" --summary "<summary>" --key-points "<points>" --add-evidence-link "Name|x-devonthink-item://..." --format json
 ```
 
 This skill must write the candidate-to-note result back into the session artifact after a successful mutation.

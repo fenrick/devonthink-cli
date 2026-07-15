@@ -4,6 +4,8 @@ description: Take an action plan produced by dt-audit-graph-corpus, dt-inspect-g
 compatibility: Works in any runtime that can read run artifacts, call dt-apply-approved-metadata, dt-build-relation-note, dt-reconcile-relation-edge, dt-build-knowledge-note, dt-safe-file, and dt-sync-export-mirror. Requires access to the run directory that produced the action plan.
 ---
 
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
+
 # dt-execute-repair-plan
 
 This skill exists because producing an action plan and executing it are different cognitive modes, and mixing them produces errors. `dt-audit-graph-corpus` produces a prioritised issue list but does not execute repairs. `dt-inspect-graph-neighbourhood` produces a per-node-and-edge action plan but does not apply it. Staged candidate sessions also produce interdependent action queues. Without a dedicated execution skill, the operator must mentally track which actions were done, what order they go in, what candidate resolved to which note, and what to do when one fails.
@@ -32,8 +34,8 @@ Execution also fails. A corrective write may produce a mismatch. An endpoint may
 Always execute in this order, regardless of what the plan contains:
 
 1. **Metadata corrections** — `Review_State`, `PKIM_ID`, `DocRole`, `Automation_Last_Run_State` via `dt-apply-approved-metadata`
-2. **Node canonicality** — create or update knowledge notes via `dt-build-knowledge-note` or `scripts/pkim update-knowledge-note`
-3. **Edge reconciliation** — create, strengthen, supersede, or retire relation notes via `dt-build-relation-note`, `scripts/pkim update-relation-note`, `dt-reconcile-relation-edge`
+2. **Node canonicality** — create or update knowledge notes via `dt-build-knowledge-note` or `pkim update-knowledge-note`
+3. **Edge reconciliation** — create, strengthen, supersede, or retire relation notes via `dt-build-relation-note`, `pkim update-relation-note`, `dt-reconcile-relation-edge`
 4. **Mirror sync** — export updated notes via `dt-sync-export-mirror`
 
 For staged candidate sessions, keep the same checkpoint model:
@@ -62,17 +64,17 @@ Follow this sequence.
 6. Report Phase 1 completion before starting Phase 2.
 7. Execute Phase 2 (node canonicality). For each action:
    a. If the action is `create`: run `dt-build-knowledge-note` (which gates through `dt-resolve-canonical-note`).
-   b. If the action is `update`: dry-run via `scripts/pkim update-knowledge-note`, confirm, apply live.
+   b. If the action is `update`: dry-run via `pkim update-knowledge-note`, confirm, apply live.
    c. Log the result.
 8. Report Phase 2 completion.
 9. Execute Phase 3 (edges). For each action:
-   a. `strengthen`: dry-run via `scripts/pkim update-relation-note`, confirm, apply live.
-   b. `create`: dry-run via `scripts/pkim create-relation-note`, confirm, apply live.
-   c. `retire`: set `RelationStatus=retired` via `scripts/pkim update-relation-note --relation-status retired`, then set `Automation_Last_Run_State` via `dt-apply-approved-metadata`.
+   a. `strengthen`: dry-run via `pkim update-relation-note`, confirm, apply live.
+   b. `create`: dry-run via `pkim create-relation-note`, confirm, apply live.
+   c. `retire`: set `RelationStatus=retired` via `pkim update-relation-note --relation-status retired`, then set `Automation_Last_Run_State` via `dt-apply-approved-metadata`.
    d. `supersede`: create the new relation note, then retire the old one.
    e. Log each result.
 10. Report Phase 3 completion.
-11. Execute Phase 4 (mirror sync) via `scripts/pkim sync-mirror --scope changed --live`.
+11. Execute Phase 4 (mirror sync) via `pkim sync-mirror --scope changed --live`.
 12. Produce the final execution summary.
 
 ## How to handle failures mid-execution
@@ -186,7 +188,7 @@ Valid `result` values: `complete` (all actions done), `partial` (some failed or 
 Dry-run an individual metadata action:
 
 ```bash
-scripts/pkim apply-metadata \
+pkim apply-metadata \
   --record "<ref>" \
   --file runs/<run-id>/intent-<action-id>.json \
   --format json
@@ -195,7 +197,7 @@ scripts/pkim apply-metadata \
 Apply live:
 
 ```bash
-scripts/pkim apply-metadata \
+pkim apply-metadata \
   --record "<ref>" \
   --file runs/<run-id>/intent-<action-id>.json \
   --live \
@@ -205,7 +207,7 @@ scripts/pkim apply-metadata \
 Strengthen a relation note (dry-run first):
 
 ```bash
-scripts/pkim update-relation-note \
+pkim update-relation-note \
   --note "<ref>" \
   --rationale "<new rationale>" \
   --format json
@@ -214,7 +216,7 @@ scripts/pkim update-relation-note \
 Retire a relation note:
 
 ```bash
-scripts/pkim update-relation-note \
+pkim update-relation-note \
   --note "<ref>" \
   --relation-status retired \
   --live \
@@ -224,5 +226,5 @@ scripts/pkim update-relation-note \
 Mirror sync after repairs:
 
 ```bash
-scripts/pkim sync-mirror --scope changed --live --format json
+pkim sync-mirror --scope changed --live --format json
 ```

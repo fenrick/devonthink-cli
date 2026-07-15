@@ -4,6 +4,8 @@ description: Validate and push a workspace batch of offline-built PKIM notes int
 compatibility: Works in any runtime that can execute the pkim CLI and resolve DEVONthink JXA calls. Requires PKIM_ALLOW_PRODUCTION_WRITES=true for live writes.
 ---
 
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
+
 # dt-push-batch
 
 This skill closes the offline-first authoring loop. Notes are built in `workspace/drafts/` with `[[PKIM_ID]]` cross-references. This skill validates the batch, stages it, and pushes it to DEVONthink in the correct order — knowledge notes first so their aliases are registered before relation notes reference them.
@@ -33,23 +35,23 @@ Aliases are what connect `[[PKIM_ID]]` links in note bodies to actual DT records
 1. Confirm all drafts for this batch are in `workspace/drafts/` (or a directory you specify).
 2. Validate the batch — all `[[PKIM_ID]]` refs must resolve within the batch or to existing DT notes:
    ```bash
-   scripts/pkim validate-batch --dir workspace/drafts/ --format json
+   pkim validate-batch --dir workspace/drafts/ --format json
    ```
 3. Read the `broken` array in the result. If any refs are broken, stop and resolve them before pushing.
 4. Stage the batch — creates `workspace/batches/BATCH-XXX/` with a manifest in knowledge-first order:
    ```bash
-   scripts/pkim validate-batch --dir workspace/drafts/ --stage --format json
+   pkim validate-batch --dir workspace/drafts/ --stage --format json
    ```
 5. Note the `batch_dir` from the output.
 6. Dry-run the push to confirm ordering and note count:
    ```bash
-   scripts/pkim push-batch --batch <batch_dir> --format json
+   pkim push-batch --batch <batch_dir> --format json
    ```
 7. Review the `push_order` list — knowledge/evidence notes must appear before relation notes.
 8. Confirm `PKIM_ALLOW_PRODUCTION_WRITES=true` is set.
 9. Run the live push:
    ```bash
-   PKIM_ALLOW_PRODUCTION_WRITES=true scripts/pkim push-batch --batch <batch_dir> --live --format json
+   PKIM_ALLOW_PRODUCTION_WRITES=true pkim push-batch --batch <batch_dir> --live --format json
    ```
 10. Read `runs/<run-id>/mutation.json`. Verify:
     - `result` is `ok` (or `partial` with acceptable errors)
@@ -63,7 +65,7 @@ Aliases are what connect `[[PKIM_ID]]` links in note bodies to actual DT records
     Tags are not set by push-batch — it handles aliases only. Apply tags per the domain conventions in `dt-build-knowledge-note` and `dt-build-relation-note`.
 12. Run mirror sync if notes are `review_state=approved`:
     ```bash
-    PKIM_ALLOW_PRODUCTION_WRITES=true scripts/pkim sync-mirror --scope changed --live --format json
+    PKIM_ALLOW_PRODUCTION_WRITES=true pkim sync-mirror --scope changed --live --format json
     ```
 
 ## Link format reference
@@ -95,16 +97,16 @@ Aliases are what connect `[[PKIM_ID]]` links in note bodies to actual DT records
 
 ```bash
 # Validate
-scripts/pkim validate-batch --dir workspace/drafts/ --format json
+pkim validate-batch --dir workspace/drafts/ --format json
 
 # Stage (creates manifest with ordering)
-scripts/pkim validate-batch --dir workspace/drafts/ --stage --format json
+pkim validate-batch --dir workspace/drafts/ --stage --format json
 
 # Dry-run
-scripts/pkim push-batch --batch workspace/batches/<batch-id>/ --format json
+pkim push-batch --batch workspace/batches/<batch-id>/ --format json
 
 # Live push
-PKIM_ALLOW_PRODUCTION_WRITES=true scripts/pkim push-batch \
+PKIM_ALLOW_PRODUCTION_WRITES=true pkim push-batch \
   --batch workspace/batches/<batch-id>/ \
   --live \
   --format json

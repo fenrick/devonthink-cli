@@ -1,8 +1,10 @@
 ---
 name: dt-build-relation-note
 description: Create one explicit PKIM relation note that states why two resolved notes are connected, not just that they are. In staged concept-set sessions, use this only after candidate edges have been rebound to concrete note identities.
-compatibility: Works in any runtime that can read both records and create a relation note through an approved write path. The local `scripts/pkim create-relation-note` command is the preferred deterministic tool path when available.
+compatibility: Works in any runtime that can read both records and create a relation note through an approved write path. The local `pkim create-relation-note` command is the preferred deterministic tool path when available.
 ---
+
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
 
 # dt-build-relation-note
 
@@ -46,11 +48,11 @@ Follow this sequence.
    - why the relation matters
 6. Mint a PKIM_ID for the relation note:
    ```bash
-   scripts/pkim mint-id --type relation
+   pkim mint-id --type relation
    ```
 7. Build the relation note draft offline using PKIM_IDs for both endpoints:
    ```bash
-   scripts/pkim build-relation-note \
+   pkim build-relation-note \
      --pkim-id RL-YYYYMMDD-NNNN \
      --source-pkim-id KN-YYYYMMDD-NNNN \
      --target-pkim-id KN-YYYYMMDD-NNNN \
@@ -63,7 +65,7 @@ Follow this sequence.
 8. Review the draft: the `## Why This Relation Exists` section must contain the rationale and `## References` must show `[[source-pkim-id]]` and `[[target-pkim-id]]`.
 9. Push via `dt-push-batch` (see that skill) or directly:
    ```bash
-   scripts/pkim create-relation-note \
+   pkim create-relation-note \
      --source "<source-ref>" --target "<target-ref>" \
      --relation <type> --rationale "<rationale>" --live --format json
    ```
@@ -109,7 +111,7 @@ A bad rationale:
 
 ### Duplicate detection before creating
 
-Before creating any relation note, check whether a note for the same source+target+type triplet already exists. Use `scripts/pkim search-notes --field Source_Item --value <source-link>` and filter the results for matching target and type. If a duplicate triplet exists:
+Before creating any relation note, check whether a note for the same source+target+type triplet already exists. Use `pkim search-notes --field Source_Item --value <source-link>` and filter the results for matching target and type. If a duplicate triplet exists:
 
 - If the existing note's rationale is weaker, `strengthen` it via `dt-reconcile-relation-edge` rather than creating a second note.
 - If the existing note's relation type is wrong, `supersede` it: create the corrected note, then retire the old one.
@@ -162,7 +164,7 @@ You are doing it badly when:
 
 ## MANDATORY: tag the record before returning success
 
-Every record this skill creates, transitions, or touches must end up with the canonical slash-namespaced tag set applied via `DTWriter.set_tags`. This is non-negotiable — see [_shared/tagging-discipline.md](../_shared/tagging-discipline.md) for the full per-class axes table and inheritance rules.
+Every record this skill creates, transitions, or touches must end up with the canonical slash-namespaced tag set applied via `mcp__devonthink__set_record_tags`. This is non-negotiable — see [_shared/tagging-discipline.md](../_shared/tagging-discipline.md) for the full per-class axes table and inheritance rules.
 
 Minimum check before this skill can declare success:
 - Structural tags for the record's class are set (`pkim/<class>`, plus the class-specific type/status/confidence axes).
@@ -227,10 +229,10 @@ Canonical shape for a live result:
 
 ```bash
 # Step 1: mint ID
-scripts/pkim mint-id --type relation
+pkim mint-id --type relation
 
 # Step 2: build draft
-scripts/pkim build-relation-note \
+pkim build-relation-note \
   --pkim-id RL-YYYYMMDD-NNNN \
   --source-pkim-id KN-YYYYMMDD-NNNN \
   --target-pkim-id KN-YYYYMMDD-NNNN \
@@ -245,7 +247,7 @@ scripts/pkim build-relation-note \
 **Direct write (single note):**
 
 ```bash
-scripts/pkim create-relation-note \
+pkim create-relation-note \
   --source "<ref>" \
   --target "<ref>" \
   --relation <relation_type> \

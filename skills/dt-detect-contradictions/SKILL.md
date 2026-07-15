@@ -4,6 +4,8 @@ description: Mirror-side audit that detects corpus-level contradictions — two 
 compatibility: Read-only against the export mirror's parsed graph (SQLite/DuckDB per WP2.1). Does not require DEVONthink to be running. Writes only to runs/<run-id>/contradiction-register.md.
 ---
 
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
+
 # dt-detect-contradictions
 
 This skill exists because contradictions inside a single KN are caught at
@@ -24,7 +26,7 @@ Use it when:
 
 Do not use it for:
 
-- within-KN contradictions — those are caught by the authoring discipline and `pkim audit-discipline`
+- within-KN contradictions — those are caught by the authoring discipline and the audit chain: `mcp__devonthink__search_records` + `get_record_text` + `get_record_properties`; findings emitted by the skill
 - conflict resolution itself — this skill detects and reports; remediation is human-driven
 
 ## Inputs

@@ -4,6 +4,8 @@ description: Find approved evidence records that have no linked knowledge note, 
 compatibility: Works in any runtime that can search evidence databases by Review_State and Knowledge_Link_State, read record content to assess synthesis readiness, and hand off to dt-build-knowledge-note.
 ---
 
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
+
 # dt-identify-knowledge-gaps
 
 This skill exists because the pipeline from approved evidence to knowledge note has no automatic drain. Records accumulate in the approved state, each one a potential knowledge note that was never created. Without a dedicated skill to surface and triage these gaps, the knowledge layer falls behind the evidence layer silently.
@@ -34,7 +36,7 @@ Follow this sequence.
 1. Identify the target databases. Default to all open evidence databases. Confirm scope with the user if processing more than one database.
 2. Query for approved evidence records with no knowledge link:
    ```bash
-   scripts/pkim search-notes \
+   pkim search-notes \
      --database "<evidence-db>" \
      --doc-role evidence \
      --review-state approved \
@@ -44,7 +46,7 @@ Follow this sequence.
    ```
 3. Also query for records where `Knowledge_Link_State` is explicitly `unlinked` (set but not resolved):
    ```bash
-   scripts/pkim search-notes \
+   pkim search-notes \
      --database "<evidence-db>" \
      --doc-role evidence \
      --review-state approved \
@@ -163,7 +165,7 @@ After processing, produce a completion report showing which candidates were hand
 Query for gap candidates (run for each evidence database in scope):
 
 ```bash
-scripts/pkim search-notes \
+pkim search-notes \
   --database "PKIM-Evidence-Work" \
   --doc-role evidence \
   --review-state approved \
@@ -175,7 +177,7 @@ scripts/pkim search-notes \
 Update `Knowledge_Link_State` after note creation (via `dt-apply-approved-metadata`):
 
 ```bash
-scripts/pkim apply-metadata \
+pkim apply-metadata \
   --record "<evidence-pkim-id>" \
   --file runs/<run-id>/knowledge-link-intent.json \
   --live \

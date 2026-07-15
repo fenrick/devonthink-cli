@@ -4,6 +4,8 @@ description: Inspect graph consequences after a staged candidate session by walk
 compatibility: Works in any runtime that can search for relation notes by Source_Item and Target_Item, read linked records, and consume the session’s candidate-to-note mapping and edge materialisation results.
 ---
 
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
+
 # dt-inspect-graph-neighbourhood
 
 This skill still enforces a 1-hop boundary, but it now accepts a **focal session set** rather than assuming one source document produced one focal note.
@@ -87,7 +89,7 @@ Produce a per-focal-note neighbourhood assessment with:
 ## Preferred tool path
 
 ```bash
-scripts/pkim search-notes --field Source_Item --value "<focal-item-link>" --database "PKIM-Knowledge" --format json
-scripts/pkim search-notes --field Target_Item --value "<focal-item-link>" --database "PKIM-Knowledge" --format json
-scripts/pkim profile --record "<resolved-note-ref>" --format json
+pkim search-notes --field Source_Item --value "<focal-item-link>" --database "PKIM-Knowledge" --format json
+pkim search-notes --field Target_Item --value "<focal-item-link>" --database "PKIM-Knowledge" --format json
+pkim profile --record "<resolved-note-ref>" --format json
 ```

@@ -1,8 +1,10 @@
 ---
 name: dt-safe-file
 description: Evaluate, then safely replicate or move one DEVONthink record under PKIM filing policy with dry-run first and post-write verification. Make sure to use this skill whenever the user asks to file, move, replicate, archive, or relocate a PKIM record in DEVONthink, even if they describe it as "put this where it belongs" rather than naming the command.
-compatibility: Works in any runtime that can resolve a DEVONthink record, validate filing policy, and run the shared `scripts/pkim safe-file` command surface. The local CLI is the preferred deterministic path when available.
+compatibility: Works in any runtime that can resolve a DEVONthink record, validate filing policy, and run the shared `pkim safe-file` command surface. The local CLI is the preferred deterministic path when available.
 ---
+
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
 
 # dt-safe-file
 
@@ -46,7 +48,7 @@ Follow this sequence.
 
 1. Resolve the target record and intended destination.
 2. If the destination group does not exist yet, switch first to `skills/dt-ensure-group-path/SKILL.md`.
-3. Run dry-run first with `scripts/pkim safe-file ... --format json`.
+3. Run dry-run first with `pkim safe-file ... --format json`.
 4. Read the returned `risk_level`, `risk_flags`, `blocking`, and `rationale`.
 5. If the result is `blocked`, stop and explain the blocking condition plainly.
 6. If the result is a proposal, confirm whether the user wants the live action.
@@ -143,7 +145,7 @@ You are doing it badly when:
 
 ## MANDATORY: tag the record before returning success
 
-Every record this skill creates, transitions, or touches must end up with the canonical slash-namespaced tag set applied via `DTWriter.set_tags`. This is non-negotiable — see [_shared/tagging-discipline.md](../_shared/tagging-discipline.md) for the full per-class axes table and inheritance rules.
+Every record this skill creates, transitions, or touches must end up with the canonical slash-namespaced tag set applied via `mcp__devonthink__set_record_tags`. This is non-negotiable — see [_shared/tagging-discipline.md](../_shared/tagging-discipline.md) for the full per-class axes table and inheritance rules.
 
 Minimum check before this skill can declare success:
 - Structural tags for the record's class are set (`pkim/<class>`, plus the class-specific type/status/confidence axes).
@@ -224,7 +226,7 @@ A `result` of `"mismatch"` means the after-state did not match the intended acti
 Dry-run:
 
 ```bash
-scripts/pkim safe-file \
+pkim safe-file \
   --record "<ref>" \
   --destination "/Sources/Imported/PKIM" \
   --action move \
@@ -234,7 +236,7 @@ scripts/pkim safe-file \
 Live:
 
 ```bash
-scripts/pkim safe-file \
+pkim safe-file \
   --record "<ref>" \
   --destination "/Sources/Imported/PKIM" \
   --action move \

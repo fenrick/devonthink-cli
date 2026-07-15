@@ -4,6 +4,8 @@ description: Scan the full PKIM knowledge graph for known failure patterns acros
 compatibility: Works in any runtime that can run multiple search-notes queries across PKIM databases and read the results. This skill is read-only — it diagnoses and prioritises but does not execute repairs. All repairs route through the appropriate sub-skills.
 ---
 
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
+
 # dt-audit-graph-corpus
 
 This skill exists because neighbourhood-level reconciliation can only fix problems you know about. If you start a reconciliation pass on a specific record, you find the problems in its neighbourhood. You do not find the zombie edges three hops away, the orphaned note with no relations, or the approved record whose mirror file was never written.
@@ -86,7 +88,7 @@ Follow this sequence. Each phase produces results independently — stop after a
 1. **Zombie edges**: Query all relation notes in `PKIM-Knowledge`. For each, check whether both `Source_Item` and `Target_Item` resolve to active records. Flag any where an endpoint is archived, missing, or `Review_State=error`.
 
    ```bash
-   scripts/pkim search-notes \
+   pkim search-notes \
      --database "PKIM-Knowledge" \
      --doc-role relation \
      --format json
@@ -99,7 +101,7 @@ Follow this sequence. Each phase produces results independently — stop after a
 3. **Error state records**: Query all databases for `Review_State=error`.
 
    ```bash
-   scripts/pkim search-notes \
+   pkim search-notes \
      --database "PKIM-Knowledge" \
      --review-state error \
      --format json
@@ -228,7 +230,7 @@ Produce a structured issue report:
 Phase 1 — all relation notes:
 
 ```bash
-scripts/pkim search-notes \
+pkim search-notes \
   --database "PKIM-Knowledge" \
   --doc-role relation \
   --format json
@@ -237,7 +239,7 @@ scripts/pkim search-notes \
 Phase 1 — error state records:
 
 ```bash
-scripts/pkim search-notes \
+pkim search-notes \
   --database "PKIM-Knowledge" \
   --review-state error \
   --format json
@@ -246,7 +248,7 @@ scripts/pkim search-notes \
 Phase 2 — all knowledge notes (for orphan and mirror checks):
 
 ```bash
-scripts/pkim search-notes \
+pkim search-notes \
   --database "PKIM-Knowledge" \
   --doc-role knowledge \
   --format json
@@ -255,7 +257,7 @@ scripts/pkim search-notes \
 Phase 2 — knowledge gaps:
 
 ```bash
-scripts/pkim search-notes \
+pkim search-notes \
   --database "PKIM-Evidence-Work" \
   --doc-role evidence \
   --review-state approved \
@@ -271,7 +273,7 @@ Phase 4 — discipline audit (WP0.4):
 # (e.g. PKIM-Knowledge KNs cite PKIM-Pilot EVs), pass --also-database for
 # each evidence database so the dangling-wikilink detector doesn't
 # false-positive on cross-database citations.
-uv run pkim audit-discipline \
+pkim audit-discipline \
   --database PKIM-Knowledge \
   --also-database PKIM-Pilot \
   --also-database PKIM-Evidence-Work \

@@ -4,6 +4,8 @@ description: "Resolve one candidate concept against the existing knowledge graph
 compatibility: Works in any runtime that can read the PKIM-Knowledge database, search by alias/title, inspect compare neighbours, and carry session context from the profile concept set.
 ---
 
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
+
 # dt-resolve-canonical-note
 
 This skill now resolves **one candidate concept at a time**.
@@ -81,7 +83,7 @@ Use `blocked-by-dependency` when the candidate cannot yet be resolved because it
 
 ## MANDATORY: tag the record before returning success
 
-Every record this skill creates, transitions, or touches must end up with the canonical slash-namespaced tag set applied via `DTWriter.set_tags`. This is non-negotiable — see [_shared/tagging-discipline.md](../_shared/tagging-discipline.md) for the full per-class axes table and inheritance rules.
+Every record this skill creates, transitions, or touches must end up with the canonical slash-namespaced tag set applied via `mcp__devonthink__set_record_tags`. This is non-negotiable — see [_shared/tagging-discipline.md](../_shared/tagging-discipline.md) for the full per-class axes table and inheritance rules.
 
 Minimum check before this skill can declare success:
 - Structural tags for the record's class are set (`pkim/<class>`, plus the class-specific type/status/confidence axes).
@@ -102,15 +104,15 @@ If meaningful topical tags cannot be determined, **pause and surface to the oper
 
 ```bash
 # Typed search via the PyObjC ScriptingBridge transport (preferred).
-scripts/pkim search --database "PKIM-Knowledge" --query "<candidate concept terms>" --format json
+pkim search --database "PKIM-Knowledge" --query "<candidate concept terms>" --format json
 
 # Discovery profile for an unprofiled source record.
-scripts/pkim profile --record "<source-ref>" --format json
+pkim profile --record "<source-ref>" --format json
 
 # Deep profile when the source already exists in the corpus and the dependency
 # picture (inbound/outbound citations, claim resolution, audit findings) is
 # more useful than the discovery output.
-scripts/pkim deep-profile --record "<source-ref>" --also-database "PKIM-Pilot" --format json
+pkim deep-profile --record "<source-ref>" --also-database "PKIM-Pilot" --format json
 ```
 
-The legacy `pkim search-notes` command is retained for backward compatibility but goes through the same PyObjC bridge; new skills should use `pkim search`.
+The legacy `mcp__devonthink__search_records` command is retained for backward compatibility but goes through the same PyObjC bridge; new skills should use `mcp__devonthink__search_records`.

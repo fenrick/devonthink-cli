@@ -1,8 +1,10 @@
 ---
 name: dt-sweep-inbox
 description: Triage all records in a DEVONthink database inbox that are missing PKIM metadata, classify them by readiness, and drive each record through profile and metadata application until the intake queue is clear. Make sure to use this skill whenever the user asks to sweep the inbox, process arrivals, triage new captures, clear the needs-profile queue, run intake, or handle a batch of unprocessed records, even if they only say "what's in the inbox?" or "let's process these."
-compatibility: Works in any runtime that can read DEVONthink records, call the shared `scripts/pkim sweep-inbox` and `scripts/pkim probe-capabilities` commands, and hand off to dt-profile-record and dt-apply-approved-metadata for per-record work.
+compatibility: Works in any runtime that can read DEVONthink records, call the shared `pkim sweep-inbox` and `pkim probe-capabilities` commands, and hand off to dt-profile-record and dt-apply-approved-metadata for per-record work.
 ---
+
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
 
 # dt-sweep-inbox
 
@@ -34,7 +36,7 @@ The structure of this skill is intentionally sequential and per-record. Batch op
 Follow this sequence.
 
 1. Confirm the target database and scope (`inbox` or `all`). Default to `inbox` unless the user has asked for a wider sweep or the `Needs Profile` queue appears stale.
-2. Run `scripts/pkim sweep-inbox --database <db> --scope <scope> --format json`.
+2. Run `pkim sweep-inbox --database <db> --scope <scope> --format json`.
 3. Read the sweep output and partition records into three buckets:
    - `profile` — ready for profiling
    - `ocr-first` — readable content not yet available; OCR required first
@@ -50,7 +52,7 @@ Follow this sequence.
    b. Review the profile with the user: confirm suggested tags, destination, and risk level.
    c. Switch to `skills/dt-apply-approved-metadata/SKILL.md` to apply at minimum: `PKIM_ID: mint`, `Review_State: profiled`, `DocRole: <class>`.
    d. Confirm the metadata was applied before moving to the next record.
-8. After all profileable records in the batch are done, re-run `scripts/pkim sweep-inbox --database <db> --scope <scope> --format json`.
+8. After all profileable records in the batch are done, re-run `pkim sweep-inbox --database <db> --scope <scope> --format json`.
 9. Confirm `total` has decreased by the number of records processed. Report any records that remain unexpectedly.
 
 ## How to think about triage
@@ -112,7 +114,7 @@ You are doing it badly when:
 
 ## MANDATORY: tag the record before returning success
 
-Every record this skill creates, transitions, or touches must end up with the canonical slash-namespaced tag set applied via `DTWriter.set_tags`. This is non-negotiable — see [_shared/tagging-discipline.md](../_shared/tagging-discipline.md) for the full per-class axes table and inheritance rules.
+Every record this skill creates, transitions, or touches must end up with the canonical slash-namespaced tag set applied via `mcp__devonthink__set_record_tags`. This is non-negotiable — see [_shared/tagging-discipline.md](../_shared/tagging-discipline.md) for the full per-class axes table and inheritance rules.
 
 Minimum check before this skill can declare success:
 - Structural tags for the record's class are set (`pkim/<class>`, plus the class-specific type/status/confidence axes).
@@ -183,7 +185,7 @@ For the intake run as a whole, report to the user:
 Dry-run sweep (read-only triage):
 
 ```bash
-scripts/pkim sweep-inbox \
+pkim sweep-inbox \
   --database "PKIM-Pilot" \
   --scope inbox \
   --format json
@@ -192,11 +194,11 @@ scripts/pkim sweep-inbox \
 Live sweep (flags `needs-human` records only):
 
 ```bash
-scripts/pkim sweep-inbox \
+pkim sweep-inbox \
   --database "PKIM-Pilot" \
   --scope inbox \
   --live \
   --format json
 ```
 
-The live sweep only writes `Review_State=needs-human` to unresolvable records. It does not profile or apply full metadata. Full metadata application for `profile`-classified records goes through `scripts/pkim apply-metadata` via `dt-apply-approved-metadata`.
+The live sweep only writes `Review_State=needs-human` to unresolvable records. It does not profile or apply full metadata. Full metadata application for `profile`-classified records goes through `pkim apply-metadata` via `dt-apply-approved-metadata`.

@@ -4,6 +4,8 @@ description: Reconcile relation notes after candidate-edge materialisation, deci
 compatibility: Works in any runtime that can search for relation notes by Source_Item or Target_Item, read linked records, and call the shared write paths for bounded relation updates.
 ---
 
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
+
 # dt-reconcile-relation-edge
 
 This skill now runs **after candidate-edge materialisation**, not before.
@@ -72,19 +74,19 @@ Produce an edge-reconciliation result with:
 
 ```bash
 # Typed metadata search via the PyObjC ScriptingBridge transport.
-scripts/pkim search --database "PKIM-Knowledge" --metadata "Source_Item=<focal-item-link>" --format json
-scripts/pkim search --database "PKIM-Knowledge" --metadata "Target_Item=<focal-item-link>" --format json
+pkim search --database "PKIM-Knowledge" --metadata "Source_Item=<focal-item-link>" --format json
+pkim search --database "PKIM-Knowledge" --metadata "Target_Item=<focal-item-link>" --format json
 
 # Per-record dependency picture before edge work.
-scripts/pkim deep-profile --record "<focal-ref>" --format json
+pkim deep-profile --record "<focal-ref>" --format json
 
 # Single-relation update (rationale, status, normalize body to canonical shape).
-scripts/pkim update-relation-note --note "<relation-ref>" --rationale "<text>" --format json
+pkim update-relation-note --note "<relation-ref>" --rationale "<text>" --format json
 ```
 
 ### Bulk repair: missing ## Endpoints body sections
 
-When the discipline audit (`pkim audit-discipline`) reports a wave of `missing-body-wikilink` findings — relation notes whose `Source_Item`/`Target_Item` metadata is present but whose body has no `## Endpoints` section with PKIM_ID WikiLinks — reach for the bulk repair before working through them one at a time:
+When the discipline audit (the audit chain: `mcp__devonthink__search_records` + `get_record_text` + `get_record_properties`; findings emitted by the skill) reports a wave of `missing-body-wikilink` findings — relation notes whose `Source_Item`/`Target_Item` metadata is present but whose body has no `## Endpoints` section with PKIM_ID WikiLinks — reach for the bulk repair before working through them one at a time:
 
 ```bash
 # Dry-run preview shows what would change.

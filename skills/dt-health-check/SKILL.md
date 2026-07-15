@@ -1,8 +1,10 @@
 ---
 name: dt-health-check
 description: Determine whether the local PKIM runtime is actually fit to use before real work starts. Make sure to use this skill whenever the user asks to check setup, confirm the environment, troubleshoot why PKIM is failing, verify DEVONthink visibility, or before the first meaningful read or write action in a runtime, even if they only say "is this configured?" or "can we run it?".
-compatibility: Works in any runtime that can inspect local environment state and DEVONthink reachability. The local `scripts/pkim health-check` and `scripts/pkim probe-capabilities` commands are preferred tool paths when available.
+compatibility: Works in any runtime that can inspect local environment state and DEVONthink reachability. The local `pkim health-check` and `pkim probe-capabilities` commands are preferred tool paths when available.
 ---
+
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
 
 # dt-health-check
 
@@ -141,8 +143,8 @@ Use `write-ready` only when `production_writes_enabled` is true and all database
 When the local CLI is available, use:
 
 ```bash
-scripts/pkim health-check --format json
-scripts/pkim probe-capabilities --format json
+pkim health-check --format json
+pkim probe-capabilities --format json
 ```
 
 Those commands are useful because they provide deterministic local evidence and run artifacts. They are not the skill. The skill is the method above.

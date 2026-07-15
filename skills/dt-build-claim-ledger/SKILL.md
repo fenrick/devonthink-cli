@@ -4,6 +4,8 @@ description: Build a structured claim ledger from an evidence shortlist as Pass 
 compatibility: Read-only against DEVONthink via the PyObjC ScriptingBridge transport. Writes only to runs/<run-id>/claim-ledger.md on the filesystem. Does not mutate DEVONthink state.
 ---
 
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
+
 # dt-build-claim-ledger
 
 This skill exists because synthesis is a discipline, not a writing style. A
@@ -30,7 +32,7 @@ Do not use it for:
 
 | Input | Required | Notes |
 | --- | --- | --- |
-| `--evidence` | yes | One or more EV PKIM_IDs or item links. Repeatable. The skill walks each via `DTReader.resolve_ref`. |
+| `--evidence` | yes | One or more EV PKIM_IDs or item links. Repeatable. The skill walks each via `mcp__devonthink__lookup_records`. |
 | `--target-note-type` | yes | `literature` / `synthesis` / `topic` / `project` — informs the ledger preamble. |
 | `--run-id` | yes | The orchestrating run; controls the output path under `runs/`. |
 | `--existing-note` | optional | A KN reference; the skill seeds the ledger with the note's current claims (or `## Key points` if the note is pre-WP1.2). |
@@ -72,7 +74,7 @@ Do not use it for:
 
 ## MANDATORY: tag the record before returning success
 
-Every record this skill creates, transitions, or touches must end up with the canonical slash-namespaced tag set applied via `DTWriter.set_tags`. This is non-negotiable — see [_shared/tagging-discipline.md](../_shared/tagging-discipline.md) for the full per-class axes table and inheritance rules.
+Every record this skill creates, transitions, or touches must end up with the canonical slash-namespaced tag set applied via `mcp__devonthink__set_record_tags`. This is non-negotiable — see [_shared/tagging-discipline.md](../_shared/tagging-discipline.md) for the full per-class axes table and inheritance rules.
 
 Minimum check before this skill can declare success:
 - Structural tags for the record's class are set (`pkim/<class>`, plus the class-specific type/status/confidence axes).

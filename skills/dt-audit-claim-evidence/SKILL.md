@@ -4,6 +4,8 @@ description: Per-record audit that walks a knowledge note's ## Claims block and 
 compatibility: Read-only against DEVONthink via the PyObjC ScriptingBridge transport plus the export mirror for retirement-status lookups. Writes only to runs/<run-id>/claim-audit/<pkim_id>.json.
 ---
 
+> **Runtime note.** Any `pkim <verb>`, `DTWriter.*`, or `DTReader.*` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../../docs/design/24-dt-mcp-adoption.md](../../docs/design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces each retired symbol. The skill's judgement, tag rules, and stop conditions remain valid.
+
 # dt-audit-claim-evidence
 
 This skill exists because the existence of a claim's evidence WikiLink is not
@@ -26,13 +28,13 @@ Use it when:
 Do not use it for:
 
 - contradictions between KNs — use `dt-detect-contradictions`
-- structural-discipline checks (missing endpoints, edge-in-metadata, etc.) — use `pkim audit-discipline`
+- structural-discipline checks (missing endpoints, edge-in-metadata, etc.) — use the audit chain: `mcp__devonthink__search_records` + `get_record_text` + `get_record_properties`; findings emitted by the skill
 
 ## Inputs
 
 | Input | Required | Notes |
 | --- | --- | --- |
-| `--note` | yes | KN reference: PKIM_ID, DT UUID, or item link. Routed through `DTReader.resolve_ref`. |
+| `--note` | yes | KN reference: PKIM_ID, DT UUID, or item link. Routed through `mcp__devonthink__lookup_records`. |
 | `--strict` | optional | If set, treat any unresolved `evidence` WikiLink as a fatal finding (default: medium-severity). |
 | `--run-id` | yes | Output goes to `runs/<run-id>/claim-audit/<pkim_id>.json`. |
 
