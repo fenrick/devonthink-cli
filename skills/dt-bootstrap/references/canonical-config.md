@@ -1,6 +1,6 @@
 # Canonical configuration
 
-The shape PKIM expects to find in DEVONthink. `pkim-orient-and-setup` §Setup installs any of this that's missing; the other skills assume it's present.
+The shape PKIM expects to find in DEVONthink. `dt-bootstrap` installs any of this that's missing; every other skill assumes it's present.
 
 ## Databases
 
@@ -80,4 +80,4 @@ Create each via `mcp__devonthink__create_record` with `type: markdown`, `content
 
 ## Custom metadata fields
 
-See [metadata-schema.md](metadata-schema.md). Every field auto-registers on first write, so setup verifies each field is present by reading `mcp__devonthink__list_custom_metadata_fields` and writing missing ones against a scratch record in `PKIM-Pilot`.
+See [../../pkim-primer/references/metadata-schema.md](../../pkim-primer/references/metadata-schema.md). Every field auto-registers on first write, so `dt-bootstrap` Phase 2 verifies each field is present by reading `mcp__devonthink__list_custom_metadata_fields` and writing missing ones against a scratch record in `PKIM-Pilot`.

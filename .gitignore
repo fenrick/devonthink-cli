@@ -192,3 +192,7 @@ tmp/**
 # Not part of the repo's source surface.
 .claude/
 .agents/
+
+# Skills installed via /reload-skills that live outside the repo canonically
+skills/skill-creator/
+skills/writing-great-skills/

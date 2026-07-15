@@ -2,7 +2,7 @@
 
 > **Superseded 2026-07-15 by [24 DT MCP Adoption](24-dt-mcp-adoption.md).**
 >
-> The 20+ skills this brief mapped retired with the pkim-verb layer. The new skill set is three: `pkim-orient-and-setup`, `dt-intake`, `dt-audit`. See [`skills/README.md`](../../skills/README.md) for the current index. The *principle* recorded here (skills own judgement; the mechanism layer owns bounded mechanics) is preserved — the mechanism layer is now DEVONthink's in-app MCP server, not a PKIM-owned CLI.
+> The 20+ skills this brief mapped retired with the pkim-verb layer. The new skill set is four: `pkim-primer` (session-start reference), `dt-bootstrap` (idempotent installer), `dt-intake` (inbox sweep with subagent fan-out), `dt-audit` (graph-health check). See [`skills/README.md`](../../skills/README.md) for the current index. The *principle* recorded here (skills own judgement; the mechanism layer owns bounded mechanics) is preserved — the mechanism layer is now DEVONthink's in-app MCP server, not a PKIM-owned CLI.
 >
 > The rest of this doc is retained for reasoning history — it explains why the skill-command split exists at all. That reasoning applies unchanged to the new skill set.
 

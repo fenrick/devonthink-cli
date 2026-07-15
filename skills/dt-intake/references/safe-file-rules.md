@@ -68,7 +68,7 @@ If the record still needs human review before it's genuinely done (unclear class
 
 ## Anti-patterns
 
-- Filing to `/Inbox/Sources/...` (nested Sources under Inbox). Sources live at the database root. Fix the tree in `pkim-orient-and-setup` §Setup.
+- Filing to `/Inbox/Sources/...` (nested Sources under Inbox). Sources live at the database root. Fix the tree in `dt-bootstrap`.
 - Filing an indexed EV to `/Sources/Imported`. The classification of Imported vs Indexed is not about intent — it's about where the file physically lives.
 - Filing into `PKIM-Knowledge`'s `/Sources/*` — that path doesn't exist there. Evidence lives in evidence databases.
 - Replicating instead of moving. `replicate_record` is not for filing.

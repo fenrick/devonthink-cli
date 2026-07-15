@@ -1,6 +1,6 @@
 # Dangling WikiLinks
 
-`[[Name|Display]]` references in KN/CL bodies that DT can't resolve. Cause: either the target moved and the name is stale, the target was retired, or the WikiLink is being used for a cross-database reference (which never resolves — see [../../pkim-orient-and-setup/references/wikilink-and-item-link.md](../../pkim-orient-and-setup/references/wikilink-and-item-link.md)).
+`[[Name|Display]]` references in KN/CL bodies that DT can't resolve. Cause: either the target moved and the name is stale, the target was retired, or the WikiLink is being used for a cross-database reference (which never resolves — see [../../pkim-primer/references/wikilink-and-item-link.md](../../pkim-primer/references/wikilink-and-item-link.md)).
 
 ## Detection
 

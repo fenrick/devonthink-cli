@@ -14,12 +14,12 @@ Process record `{{UUID}}` in database `{{DATABASE_NAME}}`. Its current location 
 ## What you can use
 
 - DEVONthink 4.3+ MCP tools (`mcp__devonthink__*`). Full cheatsheet:
-  `skills/pkim-orient-and-setup/references/dt-mcp-cheatsheet.md`
+  `skills/pkim-primer/references/dt-mcp-cheatsheet.md`
 - PKIM rules (READ THESE FIRST):
-  - `skills/pkim-orient-and-setup/references/record-classes.md` — EV/KN/RL/CL definitions + PKIM_ID minting
-  - `skills/pkim-orient-and-setup/references/tag-axes.md` — mandatory tag axes per class
-  - `skills/pkim-orient-and-setup/references/metadata-schema.md` — the custom metadata fields
-  - `skills/pkim-orient-and-setup/references/wikilink-and-item-link.md` — cross-database link rule
+  - `skills/pkim-primer/references/record-classes.md` — EV/KN/RL/CL definitions + PKIM_ID minting
+  - `skills/pkim-primer/references/tag-axes.md` — mandatory tag axes per class
+  - `skills/pkim-primer/references/metadata-schema.md` — the custom metadata fields
+  - `skills/pkim-primer/references/wikilink-and-item-link.md` — cross-database link rule
   - `skills/dt-intake/references/intake-per-record.md` — the workflow you are executing
   - `skills/dt-intake/references/safe-file-rules.md` — filing destinations
   - `skills/dt-intake/references/kn-authoring.md` — when to author a KN

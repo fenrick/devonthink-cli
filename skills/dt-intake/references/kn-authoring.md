@@ -18,7 +18,7 @@ Not routinely:
 
 ## Which KN type
 
-See `../../pkim-orient-and-setup/references/record-classes.md` §KN for the closed set. Rule of thumb:
+See `../../pkim-primer/references/record-classes.md` §KN for the closed set. Rule of thumb:
 
 - One EV, close reading → `literature`
 - Many EVs → `synthesis`
@@ -31,7 +31,7 @@ See `../../pkim-orient-and-setup/references/record-classes.md` §KN for the clos
    `lookup_records name: "..."` and `search_records query: "kind:markdown docrole:knowledge mdprimarytopic:<topic>"` in `PKIM-Knowledge`. If a matching KN exists, read [merge-vs-create.md](merge-vs-create.md); usually the answer is "update the existing KN, don't create a new one".
 
 2. **Mint the KN's PKIM_ID.**
-   `KN-YYYYMMDD-NNNN` — see `../../pkim-orient-and-setup/references/record-classes.md` §PKIM_ID minting.
+   `KN-YYYYMMDD-NNNN` — see `../../pkim-primer/references/record-classes.md` §PKIM_ID minting.
 
 3. **Compose the body.**
    Frontmatter first (Title / PKIM_ID / DocRole / NoteType / Review_State / Aliases / PrimaryTopic), then:
@@ -83,7 +83,7 @@ See `../../pkim-orient-and-setup/references/record-classes.md` §KN for the clos
    }
    ```
 
-6. **Tag.** Structural + topical per `../../pkim-orient-and-setup/references/tag-axes.md`. Topical tags are inherited from the EV's tag set.
+6. **Tag.** Structural + topical per `../../pkim-primer/references/tag-axes.md`. Topical tags are inherited from the EV's tag set.
 
 7. **Update aliases** to include the PKIM_ID.
 

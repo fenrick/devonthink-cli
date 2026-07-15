@@ -4,7 +4,7 @@ Records that structurally exist but don't obey PKIM's authoring rules. Lower sev
 
 ## Untagged records
 
-Every PKIM record must carry structural + topical tags per [../../pkim-orient-and-setup/references/tag-axes.md](../../pkim-orient-and-setup/references/tag-axes.md).
+Every PKIM record must carry structural + topical tags per [../../pkim-primer/references/tag-axes.md](../../pkim-primer/references/tag-axes.md).
 
 Walk:
 
@@ -40,7 +40,7 @@ For EVs and standalone KNs, do not auto-tag — topical tag inference is content
 
 ## Missing required metadata
 
-Per `../../pkim-orient-and-setup/references/metadata-schema.md`, each class has required fields:
+Per `../../pkim-primer/references/metadata-schema.md`, each class has required fields:
 
 | Class | Required |
 |---|---|

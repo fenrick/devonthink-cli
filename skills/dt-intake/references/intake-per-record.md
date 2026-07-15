@@ -72,7 +72,7 @@ Fetch the current `aliases` first via `get_record_properties`; if it already car
 
 `mcp__devonthink__set_record_tags` — replaces the tag set. Compose:
 
-**Structural** (from `skills/pkim-orient-and-setup/references/tag-axes.md`):
+**Structural** (from `skills/pkim-primer/references/tag-axes.md`):
 
 - `pkim/evidence`
 - `evidence/status/<proposed|approved|retired|superseded>`

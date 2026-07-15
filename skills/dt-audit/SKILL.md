@@ -1,164 +1,90 @@
 ---
 name: dt-audit
-description: Graph-health audit for the PKIM corpus. Finds broken RL endpoints, dangling WikiLinks, zombie claims (retired evidence still cited), corpus-level contradictions, orphan CLs, KN/RL discipline violations. Use this weekly, before scaling ingest, or after a batch of retirements/supersessions. Not for operational reports (queue depth, metadata coverage).
+description: Audit the PKIM graph for broken RL endpoints, dangling WikiLinks, zombie claims (retired evidence still cited), corpus-level contradictions, orphan CLs and KNs, and discipline violations. Use weekly, before scaling ingest, after a retirement or supersession wave, or when the user says 'audit the graph', 'check for zombies', 'are the RLs still resolving', 'find dangling links', 'run the health check'. Not for operational reports (queue depth, metadata coverage) — those aren't part of PKIM's discipline surface.
 ---
 
-> **Runtime.** DEVONthink 4.3+ in-app MCP server. Read [`pkim-orient-and-setup`](../pkim-orient-and-setup/SKILL.md) first.
+> **Runtime.** DEVONthink 4.3+ in-app MCP server. Assumes [`pkim-primer`](../pkim-primer/SKILL.md) has been read.
 
 # dt-audit
 
 ## Purpose
 
-Confirm the corpus's graph is still coherent. This is *not* a queue-depth or metadata-coverage report — it's a semantic-health check that finds broken links, retired-evidence citations, and contradictions.
+Confirm the corpus's graph is still coherent. Six finding classes — each detects a specific decay pattern that quietly accumulates as evidence retires, references break, and discipline slips. Output is a findings list the operator can act on (or that gets dispatched back through `dt-intake` for repair).
 
-Output is a findings list the operator can act on (or dispatch back through `dt-intake` for repair). The skill does not mutate records except when authorised for specific auto-fix classes.
+This is **not** operational reporting. Queue depth, metadata coverage, mirror drift, and scale-readiness are separate concerns — the audit is graph-health only.
 
-## When to use
+## When to invoke
 
-- Weekly, as part of a maintenance cadence.
-- After a wave of EV retirements / supersessions (the ripple through KN/CL evidence links is easy to miss).
+- Weekly maintenance cadence.
+- After a wave of EV retirements or supersessions — the ripple through KN/CL evidence links is easy to miss otherwise; zombies get created quietly.
 - Before scaling ingest — an audit-clean corpus is safer to grow.
-- When something feels off: a KN links to a `Trashed` EV, a smart group empty when it shouldn't be, etc.
+- When something feels off: a KN links to a `Trashed` EV, a smart group is empty when it shouldn't be, an RL doesn't resolve when clicked.
 
-## What it checks
+## The six finding classes
 
-Six finding classes. Each has a dedicated reference doc.
+Each has its own reference; walk them in order. Higher-severity classes come first so the audit's top-line report leads with what matters.
 
-| Class | Reference | What it detects |
-|---|---|---|
-| Broken RL endpoints | [references/broken-endpoints.md](references/broken-endpoints.md) | `Source_Item` / `Target_Item` item links that don't resolve to a live record |
-| Dangling WikiLinks | [references/dangling-wikilinks.md](references/dangling-wikilinks.md) | `[[Name]]` references in KN/CL bodies that don't resolve inside `PKIM-Knowledge` |
-| Zombie claims | [references/zombie-claims.md](references/zombie-claims.md) | Claims (in `## Claims` blocks or as CL records) supported only by retired EVs |
-| Corpus contradictions | [references/contradictions.md](references/contradictions.md) | Two KNs citing the same EV with opposing edge classes; opposing CLs about the same subject |
-| Orphan records | [references/orphan-detection.md](references/orphan-detection.md) | CLs without a resolvable parent KN; KNs without any cited EV; RLs with endpoints in the same class (usually a mistake) |
-| Discipline violations | [references/discipline.md](references/discipline.md) | Untagged records; records missing required metadata fields; RLs without prose rationale; KNs without a `## Claims` block that are `KnowledgeStatus: published` |
+| Class | Reference | Detects | Severity |
+|---|---|---|---|
+| **Broken RL endpoints** | [references/broken-endpoints.md](references/broken-endpoints.md) | An RL's `Source_Item` / `Target_Item` UUID doesn't resolve (record deleted, trashed, missing) | High |
+| **Zombie claims** | [references/zombie-claims.md](references/zombie-claims.md) | Claim's cited EVs are all `evidencestatus: retired` / `superseded` — the claim looks confidently backed but every citation is stale | High |
+| **Corpus contradictions** | [references/contradictions.md](references/contradictions.md) | Two KNs cite the same EV with opposing edge classes; opposing CLs on the same subject | High |
+| **Dangling WikiLinks** | [references/dangling-wikilinks.md](references/dangling-wikilinks.md) | `[[Name]]` in a KN or CL body doesn't resolve (usually a cross-database link that should be an item link) | Medium |
+| **Orphan records** | [references/orphan-detection.md](references/orphan-detection.md) | CLs without a resolvable parent KN; literature/synthesis KNs with no cited evidence; RLs with malformed endpoints | Medium |
+| **Discipline violations** | [references/discipline.md](references/discipline.md) | Untagged records; missing required metadata; RLs without prose rationale; published KNs without `## Claims` | Low |
 
-## Overview
-
-```
-parent (this skill)
-├── read the corpus (search_records for each class of concern)
-├── run each check class in turn (some fan out; some inline)
-├── aggregate findings
-├── classify by severity (broken links + zombie claims: high; discipline nits: low)
-├── decide routing:
-│      auto-fixable → apply if authorised
-│      human-triage → include in the surfaced report
-├── write the audit summary
-└── surface to operator
-```
-
-Unlike `dt-intake`, the audit doesn't need one subagent per record — most checks are corpus-level queries that don't benefit from fan-out. But specific per-record deep checks (e.g. "read the KN body and match every WikiLink") can be dispatched to Sonnet subagents in parallel if the finding count is large. Keep it simple: run the query first, fan out only when the finding count justifies it.
+Each reference is self-contained — detection walk, finding shape, triage guidance, auto-fix routing (if any). The parent workflow below just names when to invoke each, not what each does.
 
 ## Preflight
 
-Run `pkim-orient-and-setup` §Preflight. Additionally check the smart-group set is intact — if the canonical smart groups are stale, the audit will miss things:
+Primer's preflight, plus one canonical-smart-group spot check:
 
 ```
-mcp__devonthink__lookup_records
-  location: "/Needs Human Review"
-  database_uuid: <PKIM-Knowledge>
+mcp__devonthink__is_running
+mcp__devonthink__get_databases
+mcp__devonthink__lookup_records location: "/Needs Human Review" database_uuid: <PKIM-Knowledge>
 ```
 
-Repeat for each canonical smart group. If any are missing, run `pkim-orient-and-setup` §Setup first.
+If the canonical smart groups are missing, the audit will miss things — run [`dt-bootstrap`](../dt-bootstrap/SKILL.md) first.
 
-## Workflow
+## Parent workflow
 
-### 1. Broken RL endpoints
+For each finding class, run its detection walk per the reference. Most classes are corpus-level `search_records` queries plus a follow-up per hit — they don't benefit from subagent fan-out because the queries themselves batch. Fan out to Sonnet subagents only when the follow-up count crosses ~50 records and the per-record read + judgement is substantial (only really applies to dangling-WikiLink and zombie-claim walks on a large corpus).
 
-For each RL in `PKIM-Knowledge`:
+1. **Broken RL endpoints** — walk every RL; for each, extract endpoint UUIDs and resolve.
+2. **Zombie claims** — walk every KN's `## Claims` block and every CL's `## Evidence`; check each cited EV's `evidencestatus`.
+3. **Corpus contradictions** — build the shared-EV opposing-RL index; walk supersession chains; check same-subject opposing CLs.
+4. **Dangling WikiLinks** — for each KN and CL, ask DT: `get_record_unlinked_wiki_links`.
+5. **Orphan records** — check CL → parent-KN resolution, KN → cited-EV existence, RL → endpoint-class validity.
+6. **Discipline violations** — tag completeness, required metadata presence, RL rationale prose, published-KN claim block.
 
-```
-mcp__devonthink__search_records
-  database_uuid: <PKIM-Knowledge>
-  query: "kind:markdown mddocrole:relation"
-  limit: 1000
-```
+Aggregate findings by class. Rank by severity from the table above.
 
-For each RL, read `Source_Item` and `Target_Item` from custom metadata. Extract the UUID from each item link, then check resolution via `get_record_properties`. If either endpoint returns "record not found", the RL is broken.
+## Auto-fix
 
-Findings: `{class: broken-endpoint, uuid, pkim_id, endpoint: source|target, broken_uuid}`.
+Only two classes have any auto-fixable subset, and only when the fix is *mechanically obvious*:
 
-**Auto-fix routing:** none. Broken endpoints need human triage — the target may have been retired deliberately (and the RL should be trashed) or moved (needs re-linking).
+- **Dangling WikiLinks** — `[[EV-YYYYMMDD-NNNN|Name]]` where the EV resolves via `search_records mdpkim_id:<id>` and returns exactly one hit → build the item-link form and patch the body via `update_record_content mode: "patch"`. Requires the operator to have authorised discipline auto-fix.
+- **Discipline / untagged records** — for CLs and RLs where the topical tag set is inheritable from the parent KN or endpoints, apply the inherited set via `set_record_tags`. EVs and standalone KNs stay on the human-triage path — topical tags need content-reading judgement.
 
-### 2. Dangling WikiLinks
+Everything else — broken endpoints, zombies, contradictions, orphans — routes to human triage. The audit surfaces; the operator decides.
 
-For each KN and CL body in `PKIM-Knowledge`, use DT MCP directly:
+## Completion criterion
 
-```
-mcp__devonthink__get_record_unlinked_wiki_links
-  uuid: <record-UUID>
-```
+The audit is complete when **all six** classes have been walked to their natural end:
 
-DT returns the list of `[[Name]]` references that don't resolve within the database. Anything returned is a dangling WikiLink.
+1. Every RL in scope has had both endpoints resolved (or explicitly logged as broken).
+2. Every KN's claim block and every CL's evidence section has been walked, and every cited EV has been checked for `evidencestatus`.
+3. The shared-EV opposing-RL index has been built across every RL in scope; supersession chains walked to termination.
+4. Every KN and CL has had `get_record_unlinked_wiki_links` called on it.
+5. Every CL, literature-KN, synthesis-KN, and RL has had its structural expectations checked.
+6. Every record in scope has had its tag set + required metadata checked.
 
-Findings: `{class: dangling-wikilink, uuid, pkim_id, wikilink_text, likely_target?}`.
+Anything less is partial. Do not declare success on a subset — a partial audit that says "clean" is worse than no audit at all, because the operator trusts it. If time or budget requires a scoped run, state the scope explicitly in the report ("audited PKIM-Knowledge only; PKIM-Evidence-* deferred").
 
-**Auto-fix routing:** if the WikiLink target is an EV (cross-database), the fix is to convert `[[EV-...|Name]]` to `[Name](x-devonthink-item://<uuid>)` — but only if the target UUID can be found. Route to `needs-human` when target is ambiguous.
+## Report
 
-### 3. Zombie claims
-
-For each KN / CL with claim material:
-
-- Read `## Claims` block (KN) or the claim's `## Evidence` section (CL).
-- For each cited EV item link, extract the UUID and check its `evidencestatus`.
-- If all citations are `retired` or `superseded`, the claim is a zombie.
-
-See [references/zombie-claims.md](references/zombie-claims.md) for the exact walk.
-
-Findings: `{class: zombie-claim, uuid, pkim_id, claim_text, retired_evidence_uuids}`.
-
-**Auto-fix routing:** none. Zombies need human triage — either the claim needs new supporting evidence, or the claim itself retires.
-
-### 4. Corpus contradictions
-
-Detect via two paths:
-
-- **Shared-EV opposing edges**: find EV → KN_A `supports` and EV → KN_B `contradicts` (or any two RLs with the same target EV and opposing types). SQL-like walk over RL records.
-- **Same-subject opposing CLs**: CLs whose `primarytopic` matches and whose `claimtype`/text implies mutual exclusion.
-
-See [references/contradictions.md](references/contradictions.md).
-
-Findings: `{class: corpus-contradiction, records: [uuid_a, uuid_b], shared_evidence: uuid}`.
-
-**Auto-fix routing:** none. Contradictions are the audit's whole point — they're for the operator to triage.
-
-### 5. Orphan records
-
-For each CL: is there a resolvable parent KN? Missing → orphan.
-
-For each KN: is there ≥ 1 cited EV via item links or evidence-linked RLs? None → orphan candidate (allowed for `topic`/`project` KNs; not for `literature`/`synthesis`).
-
-For each RL: are Source_Item and Target_Item both resolvable AND do they point at records of appropriate classes? An RL between two EVs, or two RLs, is usually wrong.
-
-Findings per class in [references/orphan-detection.md](references/orphan-detection.md).
-
-**Auto-fix routing:** none.
-
-### 6. Discipline violations
-
-For each record class:
-
-- Untagged records (structural tags missing or topical tag count = 0).
-- Records missing required metadata fields.
-- RLs without prose in the `## Why this relation exists` section.
-- KNs with `KnowledgeStatus: published` and no `## Claims` block.
-
-See [references/discipline.md](references/discipline.md) for the exact per-class checks.
-
-**Auto-fix routing:** untagged records where the topical set can be inherited from the parent (CL from KN, RL from endpoints) — auto-apply the inherited set and update `automation_last_run_state: ok`. Everything else → `needs-human`.
-
-### 7. Aggregate
-
-Group findings by class. Count. Rank by severity:
-
-- **High**: broken-endpoint, zombie-claim, corpus-contradiction.
-- **Medium**: dangling-wikilink, orphan-cl, orphan-kn (literature/synthesis).
-- **Low**: discipline violations.
-
-### 8. Report
-
-Emit a summary block to the operator:
+Emit a summary block:
 
 ```
 dt-audit run 2026-07-15
@@ -167,41 +93,36 @@ Broken RL endpoints:     3
 Zombie claims:           5
 Corpus contradictions:   1
 Dangling WikiLinks:      8
-Orphan CLs:              2
-Orphan KNs:              4
+Orphan records:          6
 Discipline violations:  17
 
 Top-severity items (first 10):
-  1. RL-20260601-0003 → source_item unresolved (record trashed 2026-06-15)
+  1. RL-20260601-0003 → source_item unresolved (target trashed 2026-06-15)
   2. KN-20260503-0002 → claim "..." backed only by EV-20260101-0007 (retired)
   ...
+
+Auto-fixes applied this run:
+  - 3 CLs re-tagged from parent KN topical set
+  - 2 dangling WikiLinks converted to item links
 ```
 
-If any auto-fixes were applied (only in the discipline class), list them separately.
+If nothing was auto-fixed, omit that section rather than printing an empty one.
 
 ## Stop conditions
 
-- Any DT MCP call returns a hard error → stop and surface.
-- The audit finds > 100 high-severity findings → stop; the corpus needs targeted human triage before continuing.
+- A DT MCP call returns a hard error → stop and surface the exact call + response.
+- The audit finds > 100 high-severity findings → stop; a corpus in that state needs targeted human triage before more scanning helps.
 - The operator interrupts.
 
 ## Anti-patterns
 
-- **Auto-fixing outside the sanctioned classes.** Zombies, contradictions, broken links are all human-triage. Don't try to be clever.
-- **Running the audit against `PKIM-Pilot`** as if it were the real corpus. Pilot is scratch; findings there don't matter.
-- **Producing operational reports (queue depth, metadata coverage, mirror drift) inside the audit.** Those are separate concerns; this skill is graph-health only.
-
-## References
-
-- [references/broken-endpoints.md](references/broken-endpoints.md) — RL endpoint validation
-- [references/dangling-wikilinks.md](references/dangling-wikilinks.md) — WikiLink resolution + item-link conversion
-- [references/zombie-claims.md](references/zombie-claims.md) — retired-evidence detection
-- [references/contradictions.md](references/contradictions.md) — corpus-level contradictions
-- [references/orphan-detection.md](references/orphan-detection.md) — CL/KN/RL orphan rules
-- [references/discipline.md](references/discipline.md) — per-class discipline checks
-- [../pkim-orient-and-setup/SKILL.md](../pkim-orient-and-setup/SKILL.md) — orientation
+- **Auto-fixing outside the sanctioned subsets.** Zombies, contradictions, broken endpoints all require human judgement; a "helpful" auto-retire of a zombie claim discards the author's intent.
+- **Running against `PKIM-Pilot` as if it were the real corpus.** Pilot is scratch; findings there don't matter.
+- **Producing operational reports inside the audit.** Queue depth, metadata coverage, mirror drift, scale-readiness — those are separate concerns. This skill is graph-health only.
+- **Declaring success on a partial walk.** If you stopped early, say so.
 
 ## Related skills
 
-- [`pkim-orient-and-setup`](../pkim-orient-and-setup/SKILL.md) — prerequisite.
-- [`dt-intake`](../dt-intake/SKILL.md) — the per-record counterpart. Audit surfaces findings; intake fixes them one record at a time.
+- [`pkim-primer`](../pkim-primer/SKILL.md) — the vocabulary this audit's findings are expressed in. Prerequisite.
+- [`dt-bootstrap`](../dt-bootstrap/SKILL.md) — repairs canonical smart groups if the audit's preflight surfaces one missing.
+- [`dt-intake`](../dt-intake/SKILL.md) — per-record counterpart. Audit surfaces; intake fixes one record at a time.

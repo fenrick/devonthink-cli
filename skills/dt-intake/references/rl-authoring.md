@@ -19,7 +19,7 @@ Not routinely:
 
 ## Which `Relation_Type`
 
-Closed vocabulary (see `../../pkim-orient-and-setup/references/record-classes.md` §RL):
+Closed vocabulary (see `../../pkim-primer/references/record-classes.md` §RL):
 
 | Value | Use for |
 |---|---|
