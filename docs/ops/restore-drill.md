@@ -1,5 +1,7 @@
 # Restore Drill
 
+> **Runtime note (2026-07-15).** Any `pkim <verb>` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces it.
+
 ## Purpose
 
 The restore-drill check replays the minimum backup-and-restore evidence required before scaling:

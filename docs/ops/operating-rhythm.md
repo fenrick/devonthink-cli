@@ -1,5 +1,7 @@
 # Operating Rhythm
 
+> **Runtime note (2026-07-15).** Any `pkim <verb>` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md) for the mapping table.
+
 ## Purpose
 
 This page defines the regular cadence for operating PKIM as a knowledge operating system.
@@ -8,22 +10,22 @@ It answers:
 
 - what to check before work starts
 - how inbox material moves through the system
-- when skills and the `pkim` binary are used
-- where run evidence lands
+- when skills are used
+- where evidence lands
 - how to keep the knowledge graph from becoming a pile of disconnected notes
 
 ## Operating Principle
 
-PKIM work is not "run a script and hope". The rhythm is:
+PKIM work is not "call a tool and hope". The rhythm is:
 
 1. inspect the current state
 2. choose the right skill method
-3. use deterministic `pkim` verbs for bounded execution
+3. use DT MCP tools for bounded execution
 4. review the output
-5. write only through approved paths (env-var gate + dry-run preview)
-6. verify queues, graph state, and run artifacts
+5. write only through DT MCP (which honours DEVONthink's per-record and per-database gates)
+6. verify queues, graph state, and results
 
-The LLM-driven skill layer performs judgement. The `pkim` binary's atomic verbs provide repeatable mechanics. DEVONthink remains the canonical record system.
+The LLM-driven skill layer performs judgement. DT MCP tools provide repeatable mechanics. DEVONthink remains the canonical record system.
 
 ## The Meta-Skill
 
@@ -32,59 +34,56 @@ The whole operating system is one composable LLM skill:
 1. read the current state
 2. decide what kind of work is actually needed
 3. select the relevant bounded skill
-4. use `pkim` verbs only for deterministic evidence and mutation
+4. use DT MCP tools only for deterministic mutation and observation
 5. review the result against the graph, queues, and workflow contract
 6. either continue to the next skill or stop with a repairable state
 
-The smaller skills exist so the LLM can stay inside a safe method instead of solving every task from scratch. The `pkim` command surface exists so the LLM does not hand-edit DEVONthink state blindly.
+The smaller skills exist so the LLM can stay inside a safe method instead of solving every task from scratch. The DT MCP surface exists so mechanics are done through a trusted, DEVONthink-signed API.
 
 The important distinction:
 
 - **Skill layer:** why this action matters, whether it is appropriate, what risk exists, and what should happen next.
-- **Command layer:** exact reads, writes, artifacts, and validation — performed by `pkim` verbs.
+- **DT MCP layer:** exact reads, writes, searches, extractions, validations.
 - **Design layer:** the contract that says whether the action is legitimate.
-
-Progressive disclosure matters because the operator and the LLM both need the same ladder: purpose first, method second, mechanics third.
 
 ## Session Start
 
-Run this before meaningful work:
+Run these DT MCP tools before meaningful work:
 
-```bash
-pkim health-check
-pkim probe-capabilities
+```
+mcp__devonthink__is_running
+mcp__devonthink__get_databases
 ```
 
 Check:
 
-- DEVONthink is reachable
-- `PKIM-Knowledge` and target evidence databases are open
-- capability probe passes
-- write gate state is intentional
-- `.dt` metadata cache reachable
+- DEVONthink is running (`{running: true}`)
+- `PKIM-Knowledge` and target evidence databases are in the returned list
+- The scratch database (`PKIM-Pilot`) is open if you plan to test writes
+- Optionally: `mcp__devonthink__list_custom_metadata_fields` to confirm the schema
 
-If live writes are needed, set `PKIM_ALLOW_PRODUCTION_WRITES=true` only for the session that needs it. The default behaviour for every write verb is to write live when the env var is set; pass `--dry-run` to preview without touching DT.
+Writes are gated by DEVONthink's per-record `Exclude from AI` and per-database `Exclude from Chat & MCP` settings. There is no session-level env-var gate.
 
 ## Daily Or Per-Session Loop
 
 Use this order:
 
-1. Review queue health.
+1. Review queue health (via `search_records` against the canonical smart groups).
 2. Process inbox material one record at a time.
 3. Create or update knowledge notes where justified.
 4. Run graph maintenance after note work.
 5. File records only after semantic enrichment is complete.
 6. Sync mirrors when canonical notes changed.
-7. Review run artifacts and commit repo changes in small chunks.
+7. Review outcomes and commit repo changes in small chunks.
 
-The compound operations that used to be single Python verbs (`sweep-inbox`, `graph-audit`, `metadata-overview`, etc.) retired with the CLI-first pivot (see [docs/design/22-cli-first-atomic-primitives.md](../design/22-cli-first-atomic-primitives.md) §"What moves into skills"). The orchestration now lives in skill markdown that composes the atomic verbs:
+The compound operations that used to be single Python verbs (`sweep-inbox`, `graph-audit`, `metadata-overview`, etc.) live in skill markdown that composes DT MCP tools:
 
-- **Inbox triage**: `dt-sweep-inbox` skill composes `pkim list /Inbox/` + `pkim get` per record + `pkim set-metadata` + `pkim move`.
-- **Per-record profiling**: `dt-profile-record` composes `pkim get` + `pkim body` + `pkim aliases` + skill judgement.
-- **Graph audit**: `dt-audit-graph-corpus` composes `pkim search` + `pkim body` + `pkim get` and emits a findings JSON for review.
-- **Mirror export**: `dt-sync-export-mirror` composes `pkim get` + `pkim body` + (if needed) `pkim set-metadata` per indexed record.
+- **Inbox triage** — `dt-sweep-inbox` composes `search_records` (scoped to `/Inbox/`) + `get_record_properties` + `set_record_custom_metadata mode="merge"` + `move_record`.
+- **Per-record profiling** — `dt-profile-record` composes `get_record_properties` + `get_record_text` + `get_record_tags` + skill judgement.
+- **Graph audit** — `dt-audit-graph-corpus` composes `search_records` + `get_record_text` + `get_record_properties` and emits a findings JSON for review.
+- **Mirror export** — `dt-sync-export-mirror` composes `get_record_properties` + `get_record_text` + `update_record_content` where writeback is needed.
 
-Run a skill by reading its `SKILL.md` and following the steps; the skill calls `pkim` verbs directly.
+Run a skill by reading its `SKILL.md` and following the steps; the skill calls DT MCP tools directly.
 
 ## Inbox Rhythm
 
@@ -107,44 +106,34 @@ The rule that prevents mess:
 - enrich in `/Inbox/`
 - only then rename and move
 
-## Skill And Verb Relationship
+## Skill And DT MCP Relationship
 
-Skills are the operating method. The `pkim` binary provides the deterministic atomic verbs each skill composes. The full verb contract is in [docs/design/23-swift-pkim-binary.md](../design/23-swift-pkim-binary.md).
+Skills are the operating method. DT MCP tools provide the deterministic atomic mechanics each skill composes. The full DT MCP tool surface is described by the tool schemas themselves; see [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the mapping from any retired `pkim <verb>` mentions to the DT MCP tool.
 
-| Need | Skill | Composes these `pkim` verbs |
+| Need | Skill | Composes these DT MCP tools |
 | --- | --- | --- |
-| Runtime readiness | `dt-health-check` | `pkim health-check`, `pkim probe-capabilities` |
-| Inbox triage | `dt-sweep-inbox` | `pkim list`, `pkim get`, `pkim set-metadata`, `pkim move` |
-| Record profiling | `dt-profile-record` | `pkim get`, `pkim body`, `pkim aliases`, `pkim tags` |
-| Metadata writeback | `dt-apply-approved-metadata` | `pkim set-metadata` |
-| Knowledge note creation | `dt-build-knowledge-note` | `pkim mint-id`, `pkim create-note`, `pkim set-metadata`, `pkim set-body` |
-| Relation note creation | `dt-build-relation-note` | `pkim mint-id`, `pkim create-note`, `pkim set-metadata` |
-| Filing | `dt-safe-file` | `pkim move` (move-all-instances; never replicate) |
-| Graph audit | `dt-audit-graph-corpus` | `pkim search`, `pkim body`, `pkim get` |
-| Mirror refresh | `dt-sync-export-mirror` | `pkim get`, `pkim body`, `pkim mirror-of`, `pkim set-body` for indexed |
-| Bootstrap canonical setup | _(one-off)_ | `pkim setup-database`, `pkim verify-database`, `pkim verify-smart-groups`, `pkim fix-smart-groups`, `pkim install-templates` |
+| Runtime readiness | `dt-health-check` | `is_running`, `get_databases`, `list_custom_metadata_fields` |
+| Inbox triage | `dt-sweep-inbox` | `search_records`, `get_record_properties`, `set_record_custom_metadata`, `move_record` |
+| Record profiling | `dt-profile-record` | `get_record_properties`, `get_record_text`, `get_record_tags` |
+| Metadata writeback | `dt-apply-approved-metadata` | `set_record_custom_metadata` (`mode="merge"`) |
+| Knowledge note creation | `dt-build-knowledge-note` | `create_record`, `set_record_custom_metadata`, `update_record_content`, `set_record_tags` |
+| Relation note creation | `dt-build-relation-note` | `create_record`, `set_record_custom_metadata`, `update_record_content` |
+| Filing | `dt-safe-file` | `move_record` (never `replicate_record`) |
+| Graph audit | `dt-audit-graph-corpus` | `search_records`, `get_record_text`, `get_record_properties` |
+| Mirror refresh | `dt-sync-export-mirror` | `get_record_properties`, `get_record_text`, `update_record_content`, `get_imported_record_path` |
+| Bootstrap canonical setup | `dt-bootstrap-pkim` | `create_group_path`, `create_record type="group"/smart-group`, `search_records` for verification |
 
-If a skill's result is insufficient, do not invent a new one-off workflow. Improve the skill, or — only if the gap is a *missing atomic primitive* — propose a new `pkim` verb (see anti-patterns in [docs/design/23-swift-pkim-binary.md](../design/23-swift-pkim-binary.md) §"Anti-patterns" before adding compound verbs).
+If a skill's result is insufficient, improve the skill. There is no PKIM-owned runtime to extend.
 
 ## Weekly Or Batch Review
 
-Run the audit skills after a material batch of inbox processing or note creation. The skills that previously had dedicated compound verbs now compose the atomic surface:
+Run the audit skills after a material batch of inbox processing or note creation:
 
 - `dt-audit-graph-corpus` — broken relation endpoints, missing relation metadata, duplicate relations, orphan notes.
 - `dt-sync-export-mirror` — mirror drift, indexed-file divergence.
-- `dt-review-queue-health` (if it exists in your skills set) — stale or suspicious queue counts.
+- (If defined) queue-health review via `search_records` against the canonical smart groups.
 
-Review:
-
-- broken relation endpoints
-- missing relation metadata
-- duplicate relations
-- actionable orphan notes
-- mirror drift
-- automation errors
-- stale or suspicious queue counts
-
-If graph audit finds issues, use `dt-audit-graph-corpus` and a repair skill. Do not patch graph structure casually from raw command output.
+If graph audit finds issues, use `dt-audit-graph-corpus` and a repair skill (`dt-execute-repair-plan`). Do not patch graph structure casually from raw tool output.
 
 ## Mirror Rhythm
 
@@ -152,24 +141,21 @@ The mirror is a portability surface, not canonical state.
 
 The `dt-sync-export-mirror` skill composes:
 
-- `pkim mirror-of <ref>` — read the indexed-file path for one record.
-- `pkim body <ref>` — read canonical body (file-as-truth for indexed, SB plainText for imported).
-- `pkim set-body <ref>` — write back to the canonical disk file when divergence is the imported side.
-
-Live writes still require `PKIM_ALLOW_PRODUCTION_WRITES=true`.
+- `get_imported_record_path` — read the disk path for an indexed record.
+- `get_record_text` — read canonical body.
+- `update_record_content` — write back through DT (which keeps indexed files coherent).
 
 ## Where Evidence Lands
 
 | Artifact | Location |
 | --- | --- |
-| Run manifests | `runs/<run-id>/invocation.json`, `runs/<run-id>/mutation.json` (live) or `mutation-proposal.json` (dry-run) |
-| Stdout snapshots | `runs/<run-id>/stdout.json` |
-| Execution logs | `logs/` |
-| Mirror output | `exports/knowledge-mirror/` |
+| Session notes (from the operator) | wherever you keep them; the repo doesn't mandate a run manifest anymore |
+| Execution logs (from the AI client) | client-specific — Claude Code transcripts, Codex output |
+| Mirror output | `exports/knowledge-mirror/` (gitignored) |
 | Permanent operating docs | `docs/ops/` |
 | Permanent design contracts | `docs/design/` |
 
-Run artifacts are local evidence. They are not usually committed.
+The old `runs/<run-id>/` per-invocation manifests came from the retired PKIM-owned runtime; DT MCP tools don't produce them. If a skill wants an audit trail, the skill writes it explicitly.
 
 ## Working-Process Rule
 
@@ -179,7 +165,7 @@ Design intent is not enough. Each repeated workflow must state:
 
 - when to use it
 - inputs
-- which `pkim` verbs or skills are invoked
+- which DT MCP tools or skills are invoked
 - expected artefacts
 - review points
 - stop conditions
@@ -238,12 +224,12 @@ Mirror validation failure blocks the full deep pass.
 
 Stop and inspect before continuing when:
 
-- a live write returns `ok: false` (envelope-level failure) or the verify-read in `mutation.json` doesn't match the proposed change
+- a DT MCP write returns an error or the tool's post-write read-back doesn't match the intended change
 - a relation note cannot resolve source or target
 - graph audit finds broken endpoints
 - `dt-safe-file` proposes a generic destination
 - an indexed record is about to be moved
 - a queue suddenly changes in a way the current run cannot explain
-- a skill and a `pkim` verb disagree about what should happen next
+- a skill and a DT MCP response disagree about what should happen next
 
-Use `dt-recover-failed-write` for failed or partial live writes.
+Use `dt-recover-failed-write` for failed or partial writes.

@@ -1,5 +1,7 @@
 # Compatibility Matrix
 
+> **Runtime note (2026-07-15).** Any `pkim <verb>` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces it.
+
 ## Purpose
 
 This tracked document is the release gate for runtime and automation compatibility.
@@ -12,11 +14,10 @@ Live write enablement is blocked until this matrix is current.
 
 | Component | Value | Status | Last validated |
 |---|---|---|---|
-| macOS version | `26.5` | validated against target install | `2026-04-26` |
-| DEVONthink version | `4.1.1` | validated against target install | `2026-04-26` |
-| `pkim` runtime | Swift binary at `pkim-binary/` (Swift 6.0+, ArgumentParser 1.3+) | validated against target install | `2026-05-20` |
-| External MCP transport | DT 4.3 Herschel now ships its own MCP server; PKIM does not require a vendored MCP. Coexistence path TBD (see doc 24 once written). | external dependency | _open_ |
-| target install class | `4.1` | baseline target | `2026-04-18` |
+| macOS version | Sequoia (26.x) minimum | required for DT MCP server | `2026-07-15` |
+| DEVONthink version | 4.3.2 (Herschel) | validated against target install | `2026-07-15` |
+| Runtime | DEVONthink in-app MCP server (~65 tools) | validated via live probes on `PKIM-Pilot`: `set_record_custom_metadata mode="merge"` preserves untouched fields; `update_record_content` writes indexed on-disk files | `2026-07-15` |
+| AI client | Any MCP-capable client (Claude Code, Codex CLI, etc.) | client-side dependency, not repo-side | `2026-07-15` |
 
 ---
 
@@ -71,20 +72,11 @@ All 30 fields must be defined in DEVONthink Settings > Data > Custom Metadata be
 
 ---
 
-## Approved Command List
+## Approved Command Surface
 
-After the CLI-first pivot (doc 22) the approved command surface is the Swift `pkim` binary. Full contract: [docs/design/23-swift-pkim-binary.md](../design/23-swift-pkim-binary.md). The 25-verb surface is treated as one validated unit — `swift test` exercises 70 unit + offline-cache tests against the binary; `PKIM_BRIDGE_LIVE=1 swift test` runs the live-DT benches against `PKIM-Pilot`.
+The approved command surface is DEVONthink 4.3+'s in-app MCP server. Full doctrine: [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md). The tool set is what DEVONthink ships; the coexistence table there maps every retired `pkim <verb>` to its DT MCP equivalent.
 
-| Verb class | Verbs | Last validated |
-|---|---|---|
-| Reads | `get`, `resolve`, `list`, `search`, `body`, `aliases`, `tags`, `file-path`, `mirror-of` | `2026-05-20` |
-| Atomic writes | `set-metadata`, `set-tags`, `set-name`, `set-body`, `move`, `create-group`, `create-note` | `2026-05-20` |
-| Auxiliary | `mint-id`, `extract-text`, `probe-capabilities`, `health-check` | `2026-05-20` |
-| Setup (PKIM-bootstrap) | `setup-database`, `verify-database`, `verify-smart-groups`, `fix-smart-groups`, `install-templates` | `2026-05-20` |
-
-**Legacy AppleScript surface:** the five PKIM-bootstrap AppleScripts under `scripts/` retired with the verb ports — `setup-database`, `verify-database`, `verify-smart-groups`, `fix-smart-groups`, and `install-templates` are now native verbs. The retirement table is in [doc 22 §Retirement inventory](../design/22-cli-first-atomic-primitives.md).
-
-**External MCP coexistence:** DEVONthink 4.3 Herschel ships its own MCP server. PKIM no longer requires a vendored MCP. The split between PKIM verbs (file-as-truth, atomic per-key metadata, run manifests, offline `.dt` cache reads) and DT MCP (DEVONthink-policy surface for hosts that want generic MCP access) needs a dedicated brief; tracked as "doc 24 — DT MCP coexistence" (not yet written).
+Skills call DT MCP tools by name (e.g. `mcp__devonthink__get_record_properties`, `mcp__devonthink__set_record_custom_metadata`). There is no PKIM-owned CLI or runtime layer.
 
 ---
 
@@ -92,13 +84,10 @@ After the CLI-first pivot (doc 22) the approved command surface is the Swift `pk
 
 | Test | Status | Last run |
 |---|---|---|
-| `pkim health-check` returns `ok` | `ok` | `2026-05-20` |
-| `pkim verify-database PKIM-Pilot` returns `ok` | `ok` | `2026-05-20` |
-| `pkim verify-smart-groups` returns `ok` | `ok` | `2026-05-20` |
-| `pkim probe-capabilities` returns expected envelope | `ok` | `2026-05-20` |
-| `swift test` (70 unit + offline-cache tests) | `ok` | `2026-05-20` |
-| `PKIM_BRIDGE_LIVE=1 swift test` (live SB + bench suites) | `ok` | `2026-05-20` |
-| Scratch write test against `PKIM-Pilot` via `set-metadata` | `ok` | `2026-05-20` |
+| `mcp__devonthink__is_running` returns `{running: true}` | `ok` | `2026-07-15` |
+| `mcp__devonthink__get_databases` returns the required set | `ok` | `2026-07-15` |
+| `mcp__devonthink__set_record_custom_metadata mode="merge"` preserves untouched fields (live probe on `PKIM-Pilot`) | `ok` | `2026-07-15` |
+| `mcp__devonthink__update_record_content` writes on-disk indexed file (live probe with a `/tmp/pkim-probe/` file) | `ok` | `2026-07-15` |
 
 ---
 

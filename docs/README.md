@@ -1,5 +1,7 @@
 # PKIM Documentation Map
 
+> **Runtime note (2026-07-15).** The current runtime is DEVONthink 4.3+'s in-app MCP server; skills compose its tools directly. See [design/24-dt-mcp-adoption.md](design/24-dt-mcp-adoption.md). Earlier docs frequently reference a PKIM-owned `pkim` binary or Python runtime — those are historical. Doc 24 §"Coexistence / replacement table" maps every retired `pkim <verb>` to its DT MCP replacement.
+
 ## Purpose
 
 This folder is the map for operating PKIM as a knowledge operating system.
@@ -19,7 +21,7 @@ PKIM exists to turn incoming material into durable, linked, reviewable knowledge
 7. records are renamed and filed only after semantic enrichment is complete
 8. mirrors, run artifacts, and tests make the system portable and auditable
 
-The LLM layer performs judgement through skills. The script and `pkim` command layer performs bounded deterministic reads, writes, validation, and artifact generation. DEVONthink remains canonical for records, notes, metadata, queues, groups, and item links.
+The LLM layer performs judgement through skills. DEVONthink's in-app MCP server (v4.3+) performs the bounded deterministic reads, writes, validation, and extraction. DEVONthink remains canonical for records, notes, metadata, queues, groups, and item links.
 
 ## Progressive Disclosure Contract
 
@@ -44,7 +46,7 @@ If two pages need the same fact, one page owns the fact and the other links to i
 | Workflow method | You need to process records or notes | [design/05-workflows.md](design/05-workflows.md), [ops/intake-runbook.md](ops/intake-runbook.md) |
 | Skill method | You need agent behaviour and safety boundaries | [../skills/README.md](../skills/README.md), [design/11-agent-skills-and-runbooks.md](design/11-agent-skills-and-runbooks.md) |
 | System contract | You need authoritative model or metadata detail | [design/README.md](design/README.md), [design/08-record-and-note-specification.md](design/08-record-and-note-specification.md) |
-| Implementation detail | You need to change commands or tests | [design/09-automation-architecture.md](design/09-automation-architecture.md), [ops/build-plan.md](ops/build-plan.md), `src/pkim/`, `tests/` |
+| Implementation detail | You need to change how skills call DT MCP | [design/24-dt-mcp-adoption.md](design/24-dt-mcp-adoption.md), the relevant `skills/*/SKILL.md` |
 
 ## Canonical Detail Owners
 

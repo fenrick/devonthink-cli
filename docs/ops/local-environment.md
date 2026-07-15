@@ -2,41 +2,35 @@
 
 ## Purpose
 
-Keep runtime configuration explicit so agents do not guess where to write, which database to hit, or whether production writes are allowed.
+Keep runtime configuration explicit so agents do not guess where to write or which database to hit.
+
+## Runtime
+
+The runtime is DEVONthink 4.3+'s in-app MCP server. See [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md). No Python or Swift runtime lives in this repo.
+
+To enable the DEVONthink MCP server:
+
+1. In DEVONthink, open **Settings > AI > MCP** and start the server.
+2. Copy the server URL / launch command from that panel.
+3. Register the MCP server with your AI client:
+   - **Claude Code**: `claude mcp add --scope user --transport stdio devonthink -- <launch command>` (or use the URL form if the DT settings offer one).
+   - **Codex CLI**: use the equivalent MCP registration command for your client.
+4. Confirm the server appears in your client's MCP inventory and the `mcp__devonthink__is_running` tool responds `{running: true}`.
 
 ## Baseline Variables
 
+The `.env.example` variables that used to configure a PKIM-owned runtime are largely obsolete. Only these matter now:
+
 | Variable | Purpose |
 | --- | --- |
-| `PKIM_ENV` | Logical environment name such as `development` or `scratch` |
-| `PKIM_ALLOW_PRODUCTION_WRITES` | Hard gate for any write path touching non-scratch DEVONthink libraries |
-| `PKIM_RUN_ROOT` | Directory for per-run artifacts |
-| `PKIM_LOG_ROOT` | Directory for logs |
-| `PKIM_TMP_ROOT` | Directory for temporary files |
-| `PKIM_EXPORT_ROOT` | Directory for exported markdown mirrors |
-| `PKIM_DEVONTHINK_SCRATCH_DATABASE` | Disposable test database name |
-| `PKIM_DEVONTHINK_KNOWLEDGE_DATABASE` | Canonical knowledge database name |
-| `PKIM_DEVONTHINK_MCP_COMMAND` | Exact pinned launch command or wrapper for the DEVONthink MCP |
-| `PKIM_CODEX_COMMAND` | Optional explicit Codex CLI command path or wrapper |
-| `PKIM_CLAUDE_COMMAND` | Optional explicit Claude Code command path or wrapper |
+| `PKIM_DEVONTHINK_SCRATCH_DATABASE` | Disposable test database name (`PKIM-Pilot` by convention). Used by human/skill workflows when they need a safe write target. |
+| `PKIM_DEVONTHINK_KNOWLEDGE_DATABASE` | Canonical knowledge database name (`PKIM-Knowledge`). |
 
 Use [.env.example](../../.env.example) as the starting point. Keep the real `.env` local and untracked.
 
-## Building the `pkim` binary
-
-The runtime is the Swift package at `pkim-binary/`. The Python runtime was retired by the CLI-first pivot (see [docs/design/22-cli-first-atomic-primitives.md](../design/22-cli-first-atomic-primitives.md)).
-
-- `cd pkim-binary && swift build` — debug binary at `.build/debug/pkim`.
-- `cd pkim-binary && swift build -c release` — release binary at `.build/release/pkim`.
-- `cd pkim-binary && swift test` — unit + offline-cache tests. Set `PKIM_BRIDGE_LIVE=1` to opt in to the live-DT suites.
-- Put `.build/debug/pkim` (or release) on `PATH` for skill workflows that invoke `pkim` directly.
-
-`pyproject.toml` survives only as a stub so a stray `uv pip install` at the repo root degrades gracefully; the repo has no Python runtime to install.
-
 ## Operational Rules
 
-- Default to `PKIM_ALLOW_PRODUCTION_WRITES=false`.
-- Production write enablement should happen per run, not as a permanently committed local default.
-- Treat the MCP command as versioned infrastructure. Change it intentionally and record the reason.
-- If multiple agent runtimes are used, point them at the same local wrappers and environment defaults.
-- Separate scratch and production database names at configuration level.
+- All DEVONthink mutations go through the DT MCP server. Do not modify files inside a `.dtBase2` package directly — the MCP tools explicitly warn that direct filesystem manipulation corrupts the database.
+- Per-record `Exclude from AI` and per-database `Exclude from Chat & MCP` are the write gates. DT MCP honours both automatically.
+- Cross-database references (any KN → EV citation across `PKIM-Knowledge` ↔ `PKIM-Evidence-*`) use `x-devonthink-item://<uuid>` item links, not `[[Name|Display]]` WikiLinks — the renderer only resolves WikiLinks within one database.
+- Separate scratch (`PKIM-Pilot`) and production database names at configuration level.

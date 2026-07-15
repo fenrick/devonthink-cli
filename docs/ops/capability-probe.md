@@ -2,97 +2,54 @@
 
 ## Purpose
 
-`pkim probe-capabilities` is the required preflight for every agent session that involves writes to DEVONthink. It validates that the local runtime surface is coherent before any automation acts on live databases.
+Confirm the local runtime surface is coherent before any automation acts on live databases.
 
-**Rule: no agent session may issue write operations without a passing probe (or its aggregator `pkim health-check`) in the same session.**
+**Rule: no agent session may issue writes without a passing probe in the same session.**
 
-The Swift binary's [`WriteGate`](../../pkim-binary/Sources/pkim/Runtime/WriteGate.swift) holds the in-process 60-second cache of the probe result so each subsequent write inside one invocation doesn't re-probe. See [docs/design/23-swift-pkim-binary.md](../design/23-swift-pkim-binary.md) §"Write-gate enforcement".
+Since the runtime is now DEVONthink 4.3+'s in-app MCP server (see [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md)), the "probe" is two DT MCP calls that any skill can make cheaply.
 
-## Checks
+## Preflight
 
-The probe and `health-check` report the same underlying signals:
-
-| Check | What it verifies | Passes when |
-|---|---|---|
-| `devonthink-installed` | DEVONthink bundle resolvable via ScriptingBridge | `SBApplication(bundleIdentifier:)` returns non-nil |
-| `devonthink-running` | DEVONthink is currently running | `app.isRunning == true` |
-| `required-database-open` | The named database is open in DEVONthink | database in `app.databases()` |
-| `write-gate-status` | Reports whether `PKIM_ALLOW_PRODUCTION_WRITES=true` | informational, never blocks |
-| `metadata-cache-reachable` | `.dt` Spotlight metadata cache exists at `~/Library/Metadata/com.devon-technologies.think/` | directory exists |
-
-`pkim probe-capabilities` returns the raw inputs (open databases, cache root, write-gate state, DT version). `pkim health-check [--database <name>]` aggregates them into a `result: "ok" | "failed"` checklist envelope and is what skills should call as a pre-flight.
-
-## Exit conditions
-
-Both verbs follow the standard envelope contract — see [doc 23 §Exit codes](../design/23-swift-pkim-binary.md):
-
-| Outcome | Exit code | What to do |
-|---|---|---|
-| All blocking checks pass | `0` | proceed |
-| Argument-parser failure | `1` | fix the invocation |
-| Invalid input | `2` | resolve before writing |
-| DEVONthink unreachable / gate denied | `3` | open DEVONthink, set the env var, re-run |
-| I/O error reading the `.dt` cache | `5` | check `~/Library/Metadata/com.devon-technologies.think/` |
-
-## Usage
-
-```sh
-# Human-readable JSON envelope to stdout
-pkim probe-capabilities
-
-# Aggregated pre-flight checklist (the usual call before any write session)
-pkim health-check --database PKIM-Pilot
-
-# Combined preflight inside a skill
-pkim health-check --database PKIM-Pilot \
-    && pkim probe-capabilities
+```
+mcp__devonthink__is_running
+mcp__devonthink__get_databases
 ```
 
-A run manifest lands under `runs/<run-id>/` for each invocation; reads only write `invocation.json` and `stdout.json`.
+Expected outcomes:
 
-## Output shape (probe)
+| Check | Passes when |
+|---|---|
+| DEVONthink installed | `is_running` returns without error |
+| DEVONthink running | `is_running` returns `{running: true}` |
+| Required databases open | `get_databases` returns entries whose `name` matches the required set (`PKIM-Knowledge`, `PKIM-Pilot`, at least one `PKIM-Evidence-*`) |
+| Not writing to a cloud-synced database | none of the required databases point at an iCloud path — check `get_databases` results |
 
-```json
-{
-  "ok": true,
-  "verb": "probe-capabilities",
-  "run_id": "2026-05-20T...-3f7b1c",
-  "data": {
-    "pkim_version": "0.1.0-dev",
-    "devonthink_bundle": "com.devon-technologies.think",
-    "devonthink_installed": true,
-    "devonthink_running": true,
-    "devonthink_version": "4.1.1",
-    "open_databases": ["PKIM-Knowledge", "PKIM-Pilot", ...],
-    "write_gate_open": false,
-    "cache_root": "/Users/x/Library/Metadata/com.devon-technologies.think",
-    "cache_reachable": true,
-    "cache_databases": [...]
-  },
-  "warnings": []
-}
+Optional deeper probe:
+
+```
+mcp__devonthink__list_custom_metadata_fields
 ```
 
-## Output shape (health-check)
+Confirms the canonical metadata schema (`PKIM_ID`, `DocRole`, `Review_State`, `Relation_Type`, etc.) is defined in DT. If a required field is missing, the metadata-writing skills will fail; better to catch it here.
 
-```json
-{
-  "ok": true,
-  "verb": "health-check",
-  "run_id": "...",
-  "data": {
-    "result": "ok",
-    "database": "PKIM-Pilot",
-    "checks": [
-      { "name": "devonthink-installed",    "passed": true, "detail": "..." },
-      { "name": "devonthink-running",      "passed": true, "detail": "..." },
-      { "name": "required-database-open",  "passed": true, "detail": "..." },
-      { "name": "write-gate-status",       "passed": true, "detail": "writes disabled" },
-      { "name": "metadata-cache-reachable","passed": true, "detail": "..." }
-    ],
-    "failed_checks": []
-  }
-}
-```
+## Write-gate posture
 
-`write-gate-status` is informational and never counted as a failure — it reports whether `PKIM_ALLOW_PRODUCTION_WRITES=true` without blocking the overall result.
+DEVONthink itself is the write gate. Two mechanisms:
+
+1. **Per-database exclusion.** `Exclude from Chat & MCP` in the database properties panel blocks a whole database from AI access. Encrypted / revision-proof databases have this enabled by default.
+2. **Per-record exclusion.** The `Exclude from AI` flag on any record makes DT MCP refuse to operate on it. `search_records`, `classify_record`, `find_similar_records`, and the link-traversal tools filter it out of results too.
+
+There is no PKIM-owned override. If a workflow needs to touch a `-excluded` record, the human toggles the flag off in DT first.
+
+## When the probe fails
+
+| Symptom | What to do |
+|---|---|
+| `is_running` returns `{running: false}` | Open DEVONthink and re-run |
+| `get_databases` missing a required entry | Open the missing database in DEVONthink and re-run |
+| `list_custom_metadata_fields` missing required fields | Run the `dt-bootstrap-pkim` skill (or manually add the fields per [compatibility-matrix.md](compatibility-matrix.md)) |
+| DT MCP not responding at all | Check DT's Settings > AI > MCP panel — the server may be stopped or restart may be needed |
+
+## What retired
+
+The old `pkim probe-capabilities` and `pkim health-check` verbs and their run-manifest artefacts are gone. The check is now stateless — no `runs/<run-id>/capability-manifest.json`, no local caching. Every session re-probes cheaply via DT MCP.

@@ -1,5 +1,7 @@
 # Intake Runbook — Inbox Enrichment
 
+> **Runtime note (2026-07-15).** Any `pkim <verb>` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces it.
+
 ## Purpose
 
 Turn arriving inbox records into profiled, enriched, and deliberately filed records. This runbook covers the actual pilot workflow: triage, profiling, enrichment in `/Inbox/`, optional low-risk knowledge-note creation, then rename and move once the record has semantic shape.

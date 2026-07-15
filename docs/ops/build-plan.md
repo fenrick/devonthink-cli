@@ -1,5 +1,7 @@
 # PKIM Build Plan
 
+> **Runtime note (2026-07-15).** Any `pkim <verb>` reference below is historical. The runtime is DEVONthink 4.3+'s in-app MCP server; see [../design/24-dt-mcp-adoption.md](../design/24-dt-mcp-adoption.md) §"Coexistence / replacement table" for the DT MCP tool that replaces it.
+
 ## Purpose
 
 Living operational plan for the PKIM build. Update this file when a step changes status, when acceptance criteria are revised, or when a decision made during execution changes scope or sequencing.
